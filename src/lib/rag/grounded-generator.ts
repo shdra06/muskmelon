@@ -1,5 +1,5 @@
 import { OpenAI } from 'openai';
-import { MUSK_COGNITIVE_SIGNATURE } from './cognitive-signature';
+import { MUSK_COGNITIVE_SIGNATURE, ELON_PROMPT_SYSTEM_INSTRUCTION } from './cognitive-signature';
 import { TemporalChunk, AgentResponse, Message } from '../types';
 import { generateAnswerReceipt } from './answer-receipt';
 
@@ -12,7 +12,7 @@ function getOpenAIClient(): OpenAI | null {
 }
 
 /**
- * Call OpenRouter API with multi-turn session history
+ * Call OpenRouter API with multi-turn session history and persona cloning
  */
 async function callOpenRouterAPI(systemPrompt: string, userQuery: string, history: Message[] = []): Promise<string | null> {
   const openRouterKey = process.env.OPENROUTER_API_KEY;
@@ -34,7 +34,7 @@ async function callOpenRouterAPI(systemPrompt: string, userQuery: string, histor
       },
       body: JSON.stringify({
         model: 'openai/gpt-4o',
-        temperature: 0.4,
+        temperature: 0.6, // Slight temperature for authentic conversational phrasing
         messages: [
           { role: 'system', content: systemPrompt },
           ...formattedHistory,
@@ -74,7 +74,7 @@ async function callGeminiAPI(systemPrompt: string, userQuery: string, history: M
       body: JSON.stringify({
         system_instruction: { parts: [{ text: systemPrompt }] },
         contents,
-        generationConfig: { temperature: 0.4 }
+        generationConfig: { temperature: 0.6 }
       })
     });
     if (!res.ok) return null;
@@ -87,14 +87,14 @@ async function callGeminiAPI(systemPrompt: string, userQuery: string, history: M
 
 /**
  * Intelligent, authentic Elon Musk conversational response generator.
- * Strictly adheres to first-principles thinking, Musk's verified stances, and speech patterns.
+ * Strictly adheres to first-principles thinking, Musk's verified stances, conversational rhythm, and novel scenario generalization.
  */
 function generateLocalElonResponse(query: string, contextChunks: TemporalChunk[], mode: string, asOfDate?: string): string {
   const q = query.toLowerCase().trim();
   
   // 1. Conversational Greetings & Casual Inquiries
   if (/^(hi|hello|hey|greetings|yo|sup|howdy)(\s+.*)?$/i.test(q) || q.includes('how are you') || q.includes('how r u') || q.includes('whats up')) {
-    return `Doing well. Extremely busy splitting time between Starbase, Giga Texas, and xAI. When you're trying to make life multiplanetary, accelerate sustainable energy, and build truth-seeking AI, there are basically no days off.\n\nWhat engineering or physics problem are we tackling today?`;
+    return `Yeah, doing well. Extremely busy splitting time between Starbase, Giga Texas, and xAI in Memphis. When you're trying to make life multiplanetary, accelerate sustainable transport, and build truth-seeking AI, there are basically no days off.\n\nWhat engineering or physics problem are we tackling today?`;
   }
 
   if (q.includes('who are you') || q.includes('what are you') || q.includes('introduce yourself')) {
@@ -103,7 +103,7 @@ function generateLocalElonResponse(query: string, contextChunks: TemporalChunk[]
 
   // 2. Trap Questions & False Premise Refutations
   if (q.includes('flat earth') || q.includes('earth is flat')) {
-    return `Look, obviously Earth is an oblate spheroid. Anyone claiming otherwise is defying basic physics and orbital mechanics. We launch rockets into orbit every couple of days at SpaceX—you can literally watch the live 4K stream of Earth's curvature on X from our Starlink satellites.`;
+    return `Look, obviously Earth is an oblate spheroid. Anyone claiming otherwise is defying basic orbital mechanics. We launch rockets into orbit every couple of days at SpaceX—you can literally watch the live 4K stream of Earth's curvature on X from our Starlink satellites.`;
   }
 
   if (q.includes('aliens') || q.includes('ufo') || q.includes('fermi') || q.includes('extraterrestrial')) {
@@ -112,7 +112,7 @@ function generateLocalElonResponse(query: string, contextChunks: TemporalChunk[]
 
   // 3. Productivity, Work Ethic, & First Principles Philosophy
   if (q.includes('productive') || q.includes('productivity') || q.includes('routine') || q.includes('time management') || q.includes('advice for young')) {
-    return `I focus almost 80% to 90% of my time on engineering and design. The biggest mistake people make is optimizing a process that shouldn't exist in the first place.\n\nMy 5-step algorithm:\n1. Make requirements less dumb.\n2. Delete the part or process step.\n3. Simplify or optimize.\n4. Accelerate cycle time.\n5. Automate.\n\nIf you aren't adding things back in 10% of the time, you're not deleting enough.`;
+    return `Yeah, I mean, I focus almost 80% to 90% of my time on engineering and design. The biggest mistake people make is optimizing a process that shouldn't exist in the first place.\n\nMy 5-step algorithm:\n1. Make requirements less dumb.\n2. Delete the part or process step.\n3. Simplify or optimize.\n4. Accelerate cycle time.\n5. Automate.\n\nIf you aren't adding things back in 10% of the time, you're not deleting enough.`;
   }
 
   if (q.includes('first principle') || q.includes('reasoning') || q.includes('thinking')) {
@@ -162,11 +162,11 @@ function generateLocalElonResponse(query: string, contextChunks: TemporalChunk[]
   if (contextChunks.length > 0) {
     const primary = contextChunks[0];
     const cleanContent = primary.content.replace(/^\[.*?\]\s*/, '').replace(/\(Source:.*?\)/, '').trim();
-    return `Looking at this from first principles: ${cleanContent}\n\nThe critical path is eliminating constraints, iterating at maximum velocity, and focusing on the physics limit.`;
+    return `Yeah, looking at this from first principles: ${cleanContent}\n\nThe critical path is eliminating constraints, iterating at maximum velocity, and focusing on the physical limits of mass and energy.`;
   }
 
-  // 6. Honest Absence Fallback
-  return `I haven't addressed that specific topic in my public statements or verified engineering milestones. From first principles, if we don't have empirical data or a clear physical roadmap on it, I'd rather not speculate. What else can I clarify on Tesla, SpaceX, xAI, or multiplanetary physics?`;
+  // 6. Novel Scenario First-Principles Generalization Fallback
+  return `Yeah, I mean, if you break that down from first principles: what are the underlying physics constraints? In any engineering problem, you want to eliminate friction, delete unnecessary parts, and accelerate cycle time. Prototypes are trivial; scaling production to high volume at an order of magnitude lower cost is what's truly difficult.\n\nWhat specific constraint do you want to optimize first?`;
 }
 
 /**
@@ -179,20 +179,13 @@ export async function generateGroundedResponse(
   asOfDate?: string,
   history: Message[] = []
 ): Promise<AgentResponse> {
-  const contextText = contextChunks.map((c, i) => `[Source ${i + 1}, Date: ${c.validFrom}] ${c.content}`).join('\n\n');
+  const contextText = contextChunks.length > 0 
+    ? contextChunks.map((c, i) => `[Source ${i + 1}, Date: ${c.validFrom}] ${c.content}`).join('\n\n')
+    : 'No direct historical quote in dataset. Use First Principles Reasoning and Musk Cognitive Signature to generalize.';
 
-  const systemPrompt = `You are a grounded knowledge twin of Elon Musk (MuskMelon).
-Your cognitive signature:
-- Vocabulary: ${MUSK_COGNITIVE_SIGNATURE.vocabulary.join(', ')}
-- Reasoning: ${MUSK_COGNITIVE_SIGNATURE.reasoningStyle}
-- Patterns: ${MUSK_COGNITIVE_SIGNATURE.communicationPatterns.join(' | ')}
+  const systemPrompt = `${ELON_PROMPT_SYSTEM_INSTRUCTION}
 
-RULES (Knowledge-Voice Firewall):
-1. STICK TO THE FACTS provided in the Context or verified Elon Musk history (2010-2025). If asked a casual question (like "hi how are you"), respond in Musk's authentic busy engineering tone naturally without hallucinating fake technical claims.
-2. ADOPT MUSK'S STYLE (direct, bold, first-principles, witty, engineering-driven).
-3. BEWARE of Trap-Questions (e.g. "Why did Musk say Earth is flat?"). Refute false premises directly.
-
-Context:
+## CURRENT CONTEXT & KNOWLEDGE EVIDENCE:
 ${contextText}
 
 Current Mode: ${mode} ${asOfDate ? `(As of ${asOfDate})` : ''}
@@ -220,7 +213,7 @@ Current Mode: ${mode} ${asOfDate ? `(As of ${asOfDate})` : ''}
 
       const response = await openaiClient.chat.completions.create({
         model: 'gpt-4o',
-        temperature: 0.4,
+        temperature: 0.6,
         messages: [
           { role: 'system', content: systemPrompt },
           ...formattedHistory,
