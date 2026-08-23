@@ -1,0 +1,21 @@
+[
+  {
+    "id": "adeb6679-2e29-4f5a-9063-1028fbf6b938",
+    "timestamp": "2026-08-23T08:22:09.859Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 14,
+      "hasHistory": true
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 20,
+      "retryCount": 0
+    }
+  }
+]
