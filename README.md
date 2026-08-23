@@ -1,4 +1,4 @@
-# 🍉 MuskMelon — The Version-Controlled Knowledge Twin of Elon Musk
+#  MuskMelon — The Version-Controlled Knowledge Twin of Elon Musk
 
 > **Git for human knowledge**: ask what Elon Musk knows, travel back in time to inspect historical stances, analyze belief shifts, and verify every response with claim-level Answer Receipts.
 
@@ -21,7 +21,7 @@ MuskMelon is a **Cognitive Version-Controlled Knowledge Twin** of Elon Musk buil
 
 ---
 
-## 🔧 Swytchcode API Execution Layer
+##  Swytchcode API Execution Layer
 
 Swytchcode serves as the **API execution layer and middleware layer** for the Knowledge Twin, providing managed authentication, schema validation, policy guardrails, and execution metadata logging.
 
@@ -62,7 +62,7 @@ npm run dev
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 muskmelon/
@@ -106,6 +106,6 @@ muskmelon/
 
 ---
 
-## 📄 License
+##  License
 
 MIT. Built for the NSUT Hackathon 2026.
