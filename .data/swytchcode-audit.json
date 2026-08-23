@@ -17,5 +17,43 @@
       "durationMs": 20,
       "retryCount": 0
     }
+  },
+  {
+    "id": "7a6322a5-d14b-441d-bf38-0d65e0b43437",
+    "timestamp": "2026-08-23T08:25:30.632Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 8,
+      "hasHistory": false
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 20,
+      "retryCount": 0
+    }
+  },
+  {
+    "id": "022bfd9d-88d2-4e76-b8b6-5313c52b7ccf",
+    "timestamp": "2026-08-23T08:28:29.144Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 14,
+      "hasHistory": true
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 19,
+      "retryCount": 0
+    }
   }
 ]
