@@ -93,5 +93,100 @@
       "durationMs": 5,
       "retryCount": 0
     }
+  },
+  {
+    "id": "10a0e665-ccf8-448a-82da-4ed6af98ab89",
+    "timestamp": "2026-08-23T08:37:52.252Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 14,
+      "hasHistory": true
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 17,
+      "retryCount": 0
+    }
+  },
+  {
+    "id": "aa6fd25f-0e9a-4042-b654-c8f12fd205bd",
+    "timestamp": "2026-08-23T08:37:57.182Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 85,
+      "hasHistory": true
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 8,
+      "retryCount": 0
+    }
+  },
+  {
+    "id": "f5614a11-0244-48bc-b7d0-a454b9f8c6d2",
+    "timestamp": "2026-08-23T08:38:17.578Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 20,
+      "hasHistory": true
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 6,
+      "retryCount": 0
+    }
+  },
+  {
+    "id": "f8b46fbd-75c2-4cf2-9add-ad735df3dbc6",
+    "timestamp": "2026-08-23T08:38:32.423Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 11,
+      "hasHistory": true
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 5,
+      "retryCount": 0
+    }
+  },
+  {
+    "id": "b5962d5e-13c7-4989-b1d3-efd73c473758",
+    "timestamp": "2026-08-23T08:38:35.218Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 85,
+      "hasHistory": true
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 10,
+      "retryCount": 0
+    }
   }
 ]

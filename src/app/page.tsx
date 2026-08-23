@@ -2,20 +2,27 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
-  Zap, Clock, GitCompare, Mic, MicOff, Send, RefreshCw,
-  ExternalLink, CheckCircle2, Radio, Info, Layers, Sparkles,
-  ChevronRight, Shield, MessageSquare, Database, Settings as SettingsIcon, X
+  Settings, Zap, Clock, GitCompare, Mic, MicOff, Send, RefreshCw,
+  Plus, X, CheckCircle2, ChevronRight, Volume2, Database, Shield,
+  Layers, Sparkles, AlertCircle
 } from 'lucide-react';
+import { AnswerReceiptModal } from '@/components/answer-receipt';
 import { createSpeechRecognizer } from '@/lib/voice';
 
 type Mode = 'now' | 'time' | 'diff';
 
-interface SourceItem {
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+  receipt?: any;
+  timestamp?: string;
+}
+
+interface ChatSession {
   id: string;
-  type: string;
   title: string;
-  date: string;
-  excerpt: string;
+  timestamp: string;
+  messages: Message[];
 }
 
 export default function Home() {
@@ -24,96 +31,96 @@ export default function Home() {
   const [compareDates, setCompareDates] = useState<[string, string]>(['2021-02-01', '2021-06-01']);
   const [input, setInput] = useState('');
   
-  // Active response state
-  const [activeResponse, setActiveResponse] = useState<string>(
-    "The future is fundamentally about becoming a multiplanetary species. We must extend life beyond Earth and make humanity a spacefaring civilization. That is the long-term insurance for consciousness."
-  );
-  const [activeConfidence, setActiveConfidence] = useState<number>(95);
-  const [activeSources, setActiveSources] = useState<SourceItem[]>([
+  // Messages stream
+  const [messages, setMessages] = useState<Message[]>([
     {
-      id: '1',
-      type: 'Interview',
-      title: 'Elon Musk – Lex Fridman Podcast #400',
-      date: 'Nov 9, 2023',
-      excerpt: '...becoming a multiplanetary species is critical for the long-term future of human consciousness...'
+      role: 'user',
+      content: 'What do you think about the future of human civilization?'
     },
     {
-      id: '2',
-      type: 'Speech',
-      title: 'Starbase Starship All-Hands',
-      date: 'Apr 6, 2024',
-      excerpt: '...if there is a single point of failure on Earth, we are gone. Mars is insurance for civilization.'
+      role: 'assistant',
+      content: 'The future is fundamentally about becoming a multiplanetary species. We must extend life beyond Earth.'
     },
     {
-      id: '3',
-      type: 'Tweet',
-      title: '@elonmusk on X',
-      date: 'Mar 18, 2024',
-      excerpt: 'Starship is designed to take life to Mars and extend the light of consciousness to the stars.'
+      role: 'user',
+      content: 'Best investment according to you?'
+    },
+    {
+      role: 'assistant',
+      content: 'I believe in solving real problems. Areas like energy, AI, and space tech will drive the most impact.'
+    },
+    {
+      role: 'user',
+      content: 'How do you stay productive?'
+    },
+    {
+      role: 'assistant',
+      content: 'I try to allocate my time to things that are mission critical and eliminate as much as possible.'
     }
   ]);
 
-  // Typewriter streaming effect state
-  const [displayedText, setDisplayedText] = useState<string>('');
-  const [isTyping, setIsTyping] = useState<boolean>(false);
+  // Streaming text for the latest message
+  const [streamingText, setStreamingText] = useState<string>('');
+  const [isStreaming, setIsStreaming] = useState<boolean>(false);
 
   const [isLoading, setIsLoading] = useState(false);
-
-  // Modals & Panels
-  const [showSourcesPanel, setShowSourcesPanel] = useState(false);
-  const [showAboutModal, setShowAboutModal] = useState(false);
+  const [activeReceipt, setActiveReceipt] = useState<any>(null);
+  const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
 
   // Voice Input (Speech to Text)
   const [isListening, setIsListening] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
 
-  // User chat history
-  const [messages, setMessages] = useState<any[]>([
-    {
-      role: 'user',
-      content: 'What do you think about humanity\'s future?'
-    },
-    {
-      role: 'assistant',
-      content: "The future is fundamentally about becoming a multiplanetary species. We must extend life beyond Earth and make humanity a spacefaring civilization. That is the long-term insurance for consciousness."
-    }
-  ]);
+  // Timestamp
+  const [currentDateFormatted, setCurrentDateFormatted] = useState('Tuesday, May 13, 2025');
 
-  const textareaRef = useRef<HTMLInputElement>(null);
-  const responseEndRef = useRef<HTMLDivElement>(null);
+  // Sessions
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState('session-default');
 
-  // Smooth Typewriter effect
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    if (!activeResponse) return;
-    setIsTyping(true);
-    setDisplayedText('');
-    let index = 0;
-    const stepSize = Math.max(1, Math.floor(activeResponse.length / 50));
-    
-    const interval = setInterval(() => {
-      index += stepSize;
-      if (index >= activeResponse.length) {
-        setDisplayedText(activeResponse);
-        setIsTyping(false);
-        clearInterval(interval);
-      } else {
-        setDisplayedText(activeResponse.slice(0, index));
-      }
-    }, 18);
+    try {
+      const now = new Date();
+      setCurrentDateFormatted(now.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      }));
+    } catch {}
+  }, []);
 
-    return () => clearInterval(interval);
-  }, [activeResponse]);
+  // Auto-scroll chat window when messages update
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+    }
+  }, [messages, streamingText, isLoading]);
 
-  const handleSubmit = async (e?: React.FormEvent, directQuery?: string) => {
-    if (e) e.preventDefault();
-    const queryToRun = (directQuery || input).trim();
-    if (!queryToRun || isLoading) return;
+  const handleNewSession = () => {
+    setMessages([]);
+    setStreamingText('');
+    setIsStreaming(false);
+  };
 
+  const handleClearMessages = () => {
+    setMessages([]);
+    setStreamingText('');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+
+    const userMsg = input.trim();
     setInput('');
     setIsLoading(true);
-    setDisplayedText('');
 
-    const newMsgList = [...messages, { role: 'user', content: queryToRun }];
+    const newMsgList: Message[] = [...messages, { role: 'user', content: userMsg }];
     setMessages(newMsgList);
 
     try {
@@ -122,89 +129,56 @@ export default function Home() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            topic: queryToRun,
+            topic: userMsg,
             date1: compareDates[0],
             date2: compareDates[1]
           })
         });
         const data = await res.json();
-        const replyText = `Belief shift for "${queryToRun}" between ${compareDates[0]} and ${compareDates[1]}:\n\n${data.diff.whatChanged}\n\n${data.diff.whyChanged}`;
-        setActiveResponse(replyText);
-        setActiveConfidence(92);
-        setActiveSources([
-          {
-            id: '1',
-            type: 'Document',
-            title: `Position in ${compareDates[0]}`,
-            date: compareDates[0],
-            excerpt: data.diff.period1?.position || 'Historical initial stance'
-          },
-          {
-            id: '2',
-            type: 'Document',
-            title: `Position in ${compareDates[1]}`,
-            date: compareDates[1],
-            excerpt: data.diff.period2?.position || 'Updated grounded stance'
-          }
-        ]);
-        setMessages([...newMsgList, { role: 'assistant', content: replyText }]);
+        const replyText = `Belief shift for "${userMsg}" between ${compareDates[0]} and ${compareDates[1]}:\n\n${data.diff.whatChanged}\n\n${data.diff.whyChanged}`;
+        streamAssistantResponse(newMsgList, replyText);
       } else {
         const res = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            message: queryToRun,
+            message: userMsg,
             mode,
             asOfDate: mode === 'time' ? asOfDate : undefined,
             history: messages
           })
         });
         const data = await res.json();
-        setActiveResponse(data.message);
-        setActiveConfidence(Math.round((data.receipt?.groundingConfidence || 0.94) * 100));
-
-        if (data.receipt?.sources && data.receipt.sources.length > 0) {
-          const mapped: SourceItem[] = data.receipt.sources.map((s: any, idx: number) => ({
-            id: String(idx + 1),
-            type: s.sourceType === 'tweet' ? 'Tweet' : 'Interview',
-            title: s.source || '@elonmusk public record',
-            date: s.date || 'Verified Archive',
-            excerpt: s.excerpt || s.content || 'Direct public statement from verified knowledge base.'
-          }));
-          setActiveSources(mapped);
-        } else {
-          // Dynamic contextual sources based on query topic
-          const lower = queryToRun.toLowerCase();
-          if (lower.includes('tesla') || lower.includes('cybercab') || lower.includes('fsd') || lower.includes('optimus')) {
-            setActiveSources([
-              { id: '1', type: 'Interview', title: 'Tesla AI & Robotaxi Day', date: 'Oct 10, 2024', excerpt: 'Cybercab will drop transport costs to under 20 cents a mile without steering wheels or pedals.' },
-              { id: '2', type: 'Tweet', title: '@elonmusk on X', date: 'Jan 24, 2024', excerpt: 'Tesla is fundamentally an AI & robotics company that happens to make cars.' }
-            ]);
-          } else if (lower.includes('spacex') || lower.includes('mars') || lower.includes('starship')) {
-            setActiveSources([
-              { id: '1', type: 'Interview', title: 'Starbase All-Hands Briefing', date: 'Apr 6, 2024', excerpt: 'We are on track to make life multiplanetary with Starship full and rapid reusability.' },
-              { id: '2', type: 'Podcast', title: 'Lex Fridman Podcast #400', date: 'Nov 9, 2023', excerpt: 'Starship flight test cadence is the critical path to landing on Mars within this decade.' }
-            ]);
-          } else if (lower.includes('crypto') || lower.includes('bitcoin') || lower.includes('doge')) {
-            setActiveSources([
-              { id: '1', type: 'Tweet', title: '@elonmusk on X', date: 'May 13, 2021', excerpt: 'Dogecoin has much higher transaction throughput capability than Bitcoin for daily purchases.' },
-              { id: '2', type: 'Interview', title: 'The B-Word Conference', date: 'Jul 21, 2021', excerpt: 'Tesla will accept Bitcoin once mining reaches >50% renewable energy.' }
-            ]);
-          } else {
-            setActiveSources([
-              { id: '1', type: 'Interview', title: 'Elon Musk Public Archive', date: 'Verified 2010–2025', excerpt: 'Reasoning from first principles by breaking problems down to fundamental physical truths.' }
-            ]);
-          }
-        }
-
-        setMessages([...newMsgList, { role: 'assistant', content: data.message, receipt: data.receipt }]);
+        setActiveReceipt(data.receipt);
+        streamAssistantResponse(newMsgList, data.message, data.receipt);
       }
     } catch (error) {
       console.error(error);
-      setActiveResponse("From first principles, when scaling complex hardware or software systems, you have to eliminate unnecessary constraints. What specific engineering question can I help you break down?");
+      const fallback = "From first principles, when scaling complex hardware or software systems, you have to eliminate unnecessary constraints. What specific engineering question can I help you break down?";
+      streamAssistantResponse(newMsgList, fallback);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Streaming typewriter animation for the chatbot response in the right sidebar
+  const streamAssistantResponse = (baseMsgs: Message[], fullText: string, receipt?: any) => {
+    setIsStreaming(true);
+    setStreamingText('');
+    let idx = 0;
+    const step = Math.max(2, Math.floor(fullText.length / 40));
+
+    const interval = setInterval(() => {
+      idx += step;
+      if (idx >= fullText.length) {
+        setStreamingText('');
+        setIsStreaming(false);
+        setMessages([...baseMsgs, { role: 'assistant', content: fullText, receipt }]);
+        clearInterval(interval);
+      } else {
+        setStreamingText(fullText.slice(0, idx));
+      }
+    }, 20);
   };
 
   const handleMicToggle = () => {
@@ -236,56 +210,47 @@ export default function Home() {
     }
   };
 
-  // Quick suggestion topics
-  const suggestions = [
-    { label: "🚀 Mars Colonization", query: "What is your roadmap and timeline for making life multiplanetary on Mars?" },
-    { label: "🤖 Cybercab & FSD", query: "What is the status of Tesla Robotaxi, Cybercab, and autonomous driving?" },
-    { label: "🧠 xAI & Truth-Seeking", query: "Why did you build xAI and how is Grok different from other AIs?" },
-    { label: "⚡ First Principles", query: "How do you apply first-principles reasoning to solve impossible engineering problems?" }
-  ];
-
   return (
     <div 
       style={{
         position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
         width: '100vw',
         height: '100vh',
         minHeight: '100vh',
-        backgroundColor: '#050811',
+        backgroundColor: '#070b14',
         color: '#f1f5f9',
         fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
         boxSizing: 'border-box'
       }}
     >
       
-      {/* ─── 1. FULL-BLEED CINEMATIC BACKGROUND ARTWORK (Elon clearly visible on left-center) ─── */}
+      {/* ─── 1. FULL BACKGROUND SCENE (Matching Reference Image) ─── */}
       <div 
         style={{
           position: 'absolute',
           inset: 0,
-          backgroundImage: "url('/bg-elon-office.png')",
+          backgroundImage: "url('/scenes/elon-desk-full.png')",
           backgroundRepeat: 'no-repeat',
           backgroundSize: 'cover',
-          backgroundPosition: 'left center',
+          backgroundPosition: 'center',
           zIndex: 0
         }}
       >
-        {/* Subtle dark ambient vignette overlay */}
         <div 
           style={{
             position: 'absolute',
             inset: 0,
-            background: 'linear-gradient(to right, rgba(5, 8, 17, 0.2) 0%, rgba(5, 8, 17, 0.4) 40%, rgba(5, 8, 17, 0.85) 70%, rgba(5, 8, 17, 0.96) 100%)',
+            background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 40%, rgba(0,0,0,0.3) 100%)',
             pointerEvents: 'none'
           }} 
         />
       </div>
 
-      {/* ─── 2. TOP NAV BAR (CLEAN, MINIMAL & PROFESSIONAL) ─── */}
+      {/* ─── 2. TOP APP BAR ─── */}
       <header 
         style={{
           position: 'relative',
@@ -293,47 +258,33 @@ export default function Home() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '10px 24px',
-          backgroundColor: 'rgba(7, 11, 20, 0.7)',
-          backdropFilter: 'blur(16px)',
+          padding: '8px 24px',
+          backgroundColor: 'rgba(9, 14, 26, 0.65)',
+          backdropFilter: 'blur(12px)',
           borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
           flexShrink: 0
         }}
       >
         {/* Brand */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div 
-            style={{
-              width: '28px',
-              height: '28px',
-              borderRadius: '8px',
-              backgroundColor: 'rgba(74, 222, 128, 0.15)',
-              border: '1px solid rgba(74, 222, 128, 0.4)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '16px'
-            }}
-          >
-            🍉
-          </div>
+          <span style={{ fontSize: '18px' }}>🍉</span>
           <div>
-            <div style={{ fontWeight: 800, fontSize: '15px', letterSpacing: '0.08em', color: '#ffffff' }}>
+            <div style={{ fontWeight: 800, fontSize: '14px', letterSpacing: '0.08em', color: '#ffffff' }}>
               MUSKMELON
             </div>
-            <div style={{ fontSize: '9px', fontFamily: 'monospace', letterSpacing: '0.15em', color: '#4ade80' }}>
+            <div style={{ fontSize: '9px', fontFamily: 'monospace', letterSpacing: '0.12em', color: '#4ade80' }}>
               ELON MUSK KNOWLEDGE TWIN
             </div>
           </div>
         </div>
 
-        {/* Center Mode Switcher Tabs */}
+        {/* Center Mode Switcher */}
         <div 
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '4px',
-            backgroundColor: 'rgba(15, 23, 42, 0.8)',
+            backgroundColor: 'rgba(15, 23, 42, 0.85)',
             padding: '3px 4px',
             borderRadius: '12px',
             border: '1px solid rgba(255, 255, 255, 0.1)'
@@ -358,7 +309,7 @@ export default function Home() {
             }}
           >
             <Zap size={12} />
-            <span>Now (2025+)</span>
+            <span>Now Mode (2025+)</span>
           </button>
 
           <button
@@ -406,29 +357,8 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Right Badges */}
+        {/* Right Nav */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <button
-            onClick={() => setShowSourcesPanel(!showSourcesPanel)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '5px 12px',
-              backgroundColor: showSourcesPanel ? 'rgba(56, 189, 248, 0.2)' : 'rgba(15, 23, 42, 0.8)',
-              border: showSourcesPanel ? '1px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '10px',
-              fontSize: '11px',
-              fontFamily: 'monospace',
-              color: showSourcesPanel ? '#38bdf8' : '#94a3b8',
-              cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
-          >
-            <Layers size={12} />
-            <span>Sources ({activeSources.length})</span>
-          </button>
-
           <div 
             style={{
               display: 'flex',
@@ -470,497 +400,476 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ─── 3. MAIN WORKSPACE: ELON ON LEFT (UNCOVERED), RESPONSE CARD ON RIGHT ─── */}
+      {/* ─── 3. MAIN INTERACTIVE VIEWPORT (MATCHING REFERENCE EXACTLY) ─── */}
       <main 
         style={{
           position: 'relative',
           zIndex: 20,
           flex: 1,
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'flex-end', // Positioned nicely on the right side of the face
-          padding: '16px 36px',
-          width: '100%',
-          maxWidth: '1440px',
-          margin: '0 auto',
-          boxSizing: 'border-box'
+          alignItems: 'flex-end',
+          justifyContent: 'space-between',
+          padding: '16px 28px 20px 28px',
+          boxSizing: 'border-box',
+          overflow: 'hidden'
         }}
       >
-        {/* ─── THE FLOATING RESPONSE CARD (PLACED ON THE RIGHT OF ELON'S FACE) ─── */}
+        
+        {/* ═══════════════════════════════════════════════════════
+            LEFT / CENTER: THE PRESS NOTEBOOK (PROMPT INPUT CLIPBOARD)
+            ═══════════════════════════════════════════════════════ */}
         <div 
           style={{
-            width: '100%',
-            maxWidth: '520px',
-            backgroundColor: 'rgba(10, 16, 28, 0.84)',
-            border: '1px solid rgba(56, 189, 248, 0.3)',
-            borderRadius: '20px',
-            padding: '22px',
-            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.9), inset 0 1px 1px rgba(255, 255, 255, 0.12)',
-            backdropFilter: 'blur(24px)',
+            flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            gap: '14px',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            maxWidth: '680px',
+            margin: '0 auto',
+            position: 'relative',
+            zIndex: 25
+          }}
+        >
+          {/* Mode parameters (Time Lens or Diff) */}
+          {mode === 'time' && (
+            <div 
+              style={{
+                width: '100%',
+                marginBottom: '10px',
+                padding: '6px 14px',
+                backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                border: '1px solid rgba(243, 149, 31, 0.6)',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                fontSize: '11px',
+                backdropFilter: 'blur(12px)'
+              }}
+            >
+              <span style={{ color: '#f3951f', fontFamily: 'monospace', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Clock size={13} /> Knowledge As Of Date:
+              </span>
+              <input
+                type="date"
+                value={asOfDate}
+                min="2010-01-01"
+                max="2025-12-31"
+                onChange={e => setAsOfDate(e.target.value)}
+                style={{
+                  backgroundColor: '#1e293b',
+                  border: '1px solid #334155',
+                  borderRadius: '6px',
+                  padding: '3px 8px',
+                  fontSize: '11px',
+                  color: '#ffffff',
+                  fontFamily: 'monospace'
+                }}
+              />
+            </div>
+          )}
+
+          {mode === 'diff' && (
+            <div 
+              style={{
+                width: '100%',
+                marginBottom: '10px',
+                padding: '6px 14px',
+                backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                border: '1px solid rgba(168, 85, 247, 0.6)',
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                fontSize: '11px',
+                backdropFilter: 'blur(12px)'
+              }}
+            >
+              <span style={{ color: '#c084fc', fontFamily: 'monospace', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <GitCompare size={13} /> Compare Belief Eras:
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <input
+                  type="date"
+                  value={compareDates[0]}
+                  onChange={e => setCompareDates([e.target.value, compareDates[1]])}
+                  style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '6px', padding: '2px 6px', fontSize: '10.5px', color: '#fff', fontFamily: 'monospace' }}
+                />
+                <span style={{ color: '#94a3b8', fontWeight: 700 }}>vs</span>
+                <input
+                  type="date"
+                  value={compareDates[1]}
+                  onChange={e => setCompareDates([compareDates[0], e.target.value])}
+                  style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '6px', padding: '2px 6px', fontSize: '10.5px', color: '#fff', fontFamily: 'monospace' }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* PHYSICAL PRESS NOTEBOOK CLIPBOARD */}
+          <div style={{ position: 'relative', width: '100%' }}>
+            {/* Clipboard clamp on top */}
+            <div 
+              style={{
+                position: 'absolute',
+                top: '-12px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '120px',
+                height: '20px',
+                background: 'linear-gradient(to bottom, #33312b, #1e1c18)',
+                borderTop: '1px solid #52504a',
+                borderLeft: '1px solid #52504a',
+                borderRight: '1px solid #52504a',
+                borderRadius: '6px 6px 0 0',
+                zIndex: 10,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.6)'
+              }}
+            >
+              <div style={{ width: '54px', height: '4px', backgroundColor: '#0a0a09', borderRadius: '9999px' }} />
+            </div>
+
+            {/* Paper body */}
+            <div 
+              style={{
+                backgroundColor: '#f8f5ee',
+                color: '#1c1917',
+                borderRadius: '14px',
+                border: '4px solid #33312b',
+                padding: '16px 20px 10px 20px',
+                boxShadow: '0 25px 60px rgba(0,0,0,0.9), 0 0 0 1px rgba(0,0,0,0.4)',
+                boxSizing: 'border-box',
+                position: 'relative'
+              }}
+            >
+              {/* Lined paper texture background */}
+              <div 
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: '10px',
+                  opacity: 0.35,
+                  backgroundImage: 'repeating-linear-gradient(transparent, transparent 26px, #d6cdbc 27px)',
+                  pointerEvents: 'none'
+                }}
+              />
+
+              {/* Notebook Header Line */}
+              <div 
+                style={{
+                  position: 'relative',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  borderBottom: '1px solid rgba(184, 42, 42, 0.65)',
+                  paddingBottom: '6px',
+                  marginBottom: '8px'
+                }}
+              >
+                <span style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 800, color: '#b82a2a', letterSpacing: '0.12em' }}>
+                  PRESS NOTEBOOK
+                </span>
+                <span style={{ fontStyle: 'italic', fontSize: '11px', color: '#78716c', fontFamily: 'Georgia, serif' }}>
+                  {currentDateFormatted}
+                </span>
+              </div>
+
+              {/* Form Input */}
+              <form onSubmit={handleSubmit} style={{ position: 'relative', zIndex: 10 }}>
+                <textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder={
+                    mode === 'diff'
+                      ? "Enter topic to compare beliefs (e.g. 'Bitcoin', 'AI', 'Twitter')..."
+                      : mode === 'time'
+                      ? `Ask Elon as he knew on ${asOfDate} (e.g. 'Status of Falcon 9?')...`
+                      : "Type your question to Elon..."
+                  }
+                  maxLength={2000}
+                  rows={2}
+                  style={{
+                    width: '100%',
+                    backgroundColor: 'transparent',
+                    color: '#1c1917',
+                    border: 'none',
+                    outline: 'none',
+                    resize: 'none',
+                    fontFamily: 'Georgia, serif',
+                    fontSize: '14.5px',
+                    lineHeight: '1.5',
+                    minHeight: '48px',
+                    boxSizing: 'border-box'
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSubmit(e);
+                    }
+                  }}
+                />
+
+                {voiceError && (
+                  <div style={{ fontSize: '11px', color: '#dc2626', marginBottom: '4px', fontFamily: 'sans-serif' }}>
+                    {voiceError}
+                  </div>
+                )}
+
+                {/* Footer bar */}
+                <div 
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    borderTop: '1px solid #ded5c0',
+                    paddingTop: '6px',
+                    marginTop: '6px'
+                  }}
+                >
+                  <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#78716c' }}>
+                    {input.length} / 2000
+                  </span>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={handleMicToggle}
+                      title={isListening ? "Listening... Click to stop" : "Voice Input (Speech-to-Text)"}
+                      style={{
+                        padding: '6px 10px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        backgroundColor: isListening ? '#ef4444' : '#e5dccb',
+                        color: isListening ? '#ffffff' : '#44403c',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {isListening ? <MicOff size={14} /> : <Mic size={14} />}
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={!input.trim() || isLoading}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '7px 18px',
+                        backgroundColor: '#1a2333',
+                        color: '#ffffff',
+                        borderRadius: '10px',
+                        fontFamily: 'monospace',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        border: 'none',
+                        cursor: !input.trim() || isLoading ? 'not-allowed' : 'pointer',
+                        opacity: !input.trim() || isLoading ? 0.4 : 1,
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <span>Ask</span>
+                      <Send size={12} />
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════
+            RIGHT SIDE: "SETTINGS & MEMORY" CHAT INTERFACE WINDOW
+            (Matching the exact floating card in reference image)
+            ═══════════════════════════════════════════════════════ */}
+        <aside 
+          style={{
+            width: '390px',
+            height: 'calc(100vh - 100px)',
+            maxHeight: '640px',
+            backgroundColor: 'rgba(13, 20, 36, 0.94)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            borderRadius: '20px',
+            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.85)',
+            display: 'flex',
+            flexDirection: 'column',
+            zIndex: 30,
+            flexShrink: 0,
+            overflow: 'hidden',
             boxSizing: 'border-box'
           }}
         >
-          {/* Response Header */}
+          {/* Header */}
           <div 
             style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
+              padding: '12px 18px',
               borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-              paddingBottom: '10px'
+              backgroundColor: 'rgba(7, 11, 20, 0.6)',
+              flexShrink: 0
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div 
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Settings size={16} color="#38bdf8" />
+              <h2 style={{ fontSize: '13px', fontWeight: 700, color: '#ffffff', letterSpacing: '0.04em', margin: 0 }}>
+                Settings & Memory
+              </h2>
+            </div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <button 
+                onClick={handleNewSession}
+                title="New Session"
                 style={{
-                  width: '34px',
-                  height: '34px',
-                  borderRadius: '10px',
-                  backgroundColor: '#1e293b',
-                  border: '1px solid #38bdf8',
+                  background: 'none',
+                  border: 'none',
+                  color: '#94a3b8',
+                  cursor: 'pointer',
+                  padding: '4px 6px',
+                  borderRadius: '6px',
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '16px',
-                  boxShadow: '0 0 12px rgba(56, 189, 248, 0.3)'
+                  alignItems: 'center'
                 }}
               >
-                ⚡
-              </div>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '15px', fontWeight: 800, fontFamily: 'monospace', color: '#4ade80', letterSpacing: '0.05em' }}>
-                    ELON MUSK
-                  </span>
-                  <span 
-                    style={{
-                      fontSize: '9px',
-                      fontFamily: 'monospace',
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                      backgroundColor: 'rgba(74, 222, 128, 0.15)',
-                      color: '#4ade80',
-                      border: '1px solid rgba(74, 222, 128, 0.3)',
-                      fontWeight: 700
-                    }}
-                  >
-                    GROUNDED TWIN
-                  </span>
-                </div>
-                <div style={{ fontSize: '10px', color: '#94a3b8', fontFamily: 'monospace', marginTop: '2px' }}>
-                  {isLoading ? 'Reasoning from first principles...' : isTyping ? 'Synthesizing verified statements...' : 'First-principles reasoning complete'}
-                </div>
-              </div>
-            </div>
-
-            {/* Confidence Badge */}
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '14px', fontWeight: 800, fontFamily: 'monospace', color: '#4ade80' }}>
-                {activeConfidence}%
-              </div>
-              <div style={{ fontSize: '8.5px', fontFamily: 'monospace', color: '#64748b' }}>
-                GROUNDING CONFIDENCE
-              </div>
+                <Plus size={15} />
+              </button>
+              <button 
+                onClick={handleClearMessages}
+                title="Clear Messages"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#94a3b8',
+                  cursor: 'pointer',
+                  padding: '4px 6px',
+                  borderRadius: '6px',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}
+              >
+                <X size={15} />
+              </button>
             </div>
           </div>
 
-          {/* Response Text Body with Typewriter Effect */}
+          {/* Messages Stream */}
           <div 
+            ref={chatScrollRef}
             style={{
-              minHeight: '140px',
-              maxHeight: '260px',
+              flex: 1,
               overflowY: 'auto',
-              fontSize: '14.5px',
-              lineHeight: '1.6',
-              color: '#f1f5f9',
-              fontFamily: 'system-ui, -apple-system, sans-serif',
-              whiteSpace: 'pre-wrap',
-              paddingRight: '6px'
+              padding: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+              fontSize: '12.5px',
+              lineHeight: '1.55',
+              boxSizing: 'border-box'
             }}
           >
-            {isLoading ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#38bdf8', padding: '36px 0', fontFamily: 'monospace', fontSize: '13px' }}>
-                <RefreshCw size={18} className="animate-spin" />
-                <span>Searching verified archives & reasoning from physics limits...</span>
+            {messages.map((m, idx) => (
+              <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div 
+                  style={{
+                    fontFamily: 'monospace',
+                    fontSize: '10.5px',
+                    fontWeight: 800,
+                    letterSpacing: '0.06em',
+                    color: m.role === 'user' ? '#4ade80' : '#38bdf8'
+                  }}
+                >
+                  {m.role === 'user' ? 'USER' : 'ELON'}
+                </div>
+                <div 
+                  style={{
+                    color: '#e2e8f0',
+                    paddingLeft: '6px',
+                    borderLeft: '2px solid rgba(255, 255, 255, 0.1)',
+                    whiteSpace: 'pre-wrap'
+                  }}
+                >
+                  {m.content}
+                </div>
               </div>
-            ) : (
-              <>
-                <span>{displayedText}</span>
-                {isTyping && (
+            ))}
+
+            {/* Live streaming bubble if currently typing */}
+            {isStreaming && streamingText && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ fontFamily: 'monospace', fontSize: '10.5px', fontWeight: 800, color: '#38bdf8' }}>
+                  ELON
+                </div>
+                <div 
+                  style={{
+                    color: '#f1f5f9',
+                    paddingLeft: '6px',
+                    borderLeft: '2px solid #38bdf8',
+                    whiteSpace: 'pre-wrap'
+                  }}
+                >
+                  {streamingText}
                   <span 
                     style={{
                       display: 'inline-block',
-                      width: '7px',
-                      height: '15px',
-                      backgroundColor: '#4ade80',
-                      marginLeft: '4px',
+                      width: '6px',
+                      height: '14px',
+                      backgroundColor: '#38bdf8',
+                      marginLeft: '3px',
                       verticalAlign: 'middle',
                       animation: 'pulse 1s infinite'
                     }} 
                   />
-                )}
-              </>
+                </div>
+              </div>
             )}
-            <div ref={responseEndRef} />
+
+            {isLoading && !isStreaming && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#38bdf8', fontFamily: 'monospace', fontSize: '11px', paddingTop: '8px' }}>
+                <RefreshCw size={12} className="animate-spin" />
+                <span>Reasoning from first principles...</span>
+              </div>
+            )}
           </div>
 
-          {/* Response Footer: Provenance Info */}
+          {/* Footer watermark */}
           <div 
             style={{
+              padding: '10px 16px',
+              borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+              backgroundColor: 'rgba(7, 11, 20, 0.7)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-              paddingTop: '10px',
-              fontSize: '11px',
+              fontSize: '9.5px',
               fontFamily: 'monospace',
-              color: '#94a3b8'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <CheckCircle2 size={13} color="#4ade80" />
-              <span>Grounded in verified public data</span>
-            </div>
-
-            <button
-              onClick={() => setShowSourcesPanel(true)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#38bdf8',
-                fontSize: '11px',
-                fontFamily: 'monospace',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                padding: 0
-              }}
-            >
-              <span>View {activeSources.length} Sources</span>
-              <ChevronRight size={12} />
-            </button>
-          </div>
-        </div>
-      </main>
-
-      {/* ─── 4. BOTTOM FLOATING PROMPT INPUT BAR & QUICK TOPICS ─── */}
-      <footer 
-        style={{
-          position: 'relative',
-          zIndex: 30,
-          padding: '10px 24px 18px 24px',
-          maxWidth: '880px',
-          width: '100%',
-          margin: '0 auto',
-          boxSizing: 'border-box',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '8px'
-        }}
-      >
-        {/* Quick Suggestion Pills */}
-        <div 
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '8px',
-            justifyContent: 'center',
-            width: '100%'
-          }}
-        >
-          {suggestions.map((s, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleSubmit(undefined, s.query)}
-              style={{
-                padding: '4px 10px',
-                backgroundColor: 'rgba(15, 23, 42, 0.85)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                borderRadius: '9999px',
-                fontSize: '10.5px',
-                fontFamily: 'monospace',
-                color: '#cbd5e1',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                backdropFilter: 'blur(8px)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = '#4ade80';
-                e.currentTarget.style.color = '#ffffff';
-                e.currentTarget.style.backgroundColor = 'rgba(21, 128, 61, 0.25)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-                e.currentTarget.style.color = '#cbd5e1';
-                e.currentTarget.style.backgroundColor = 'rgba(15, 23, 42, 0.85)';
-              }}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Input Form Bar */}
-        <form 
-          onSubmit={(e) => handleSubmit(e)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            width: '100%',
-            backgroundColor: 'rgba(15, 23, 42, 0.92)',
-            border: '2px solid rgba(74, 222, 128, 0.35)',
-            borderRadius: '16px',
-            padding: '7px 14px',
-            boxShadow: '0 15px 40px rgba(0, 0, 0, 0.85)',
-            backdropFilter: 'blur(20px)',
-            boxSizing: 'border-box'
-          }}
-        >
-          {/* Mic Button */}
-          <button
-            type="button"
-            onClick={handleMicToggle}
-            title={isListening ? "Listening... Click to stop" : "Voice Input (Speech-to-Text)"}
-            style={{
-              width: '34px',
-              height: '34px',
-              borderRadius: '10px',
-              border: 'none',
-              cursor: 'pointer',
-              backgroundColor: isListening ? '#ef4444' : '#1e293b',
-              color: isListening ? '#ffffff' : '#94a3b8',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              color: '#64748b',
               flexShrink: 0
             }}
           >
-            {isListening ? <MicOff size={15} /> : <Mic size={15} />}
-          </button>
-
-          {/* Text Input */}
-          <input
-            ref={textareaRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder={
-              mode === 'diff'
-                ? "Enter topic to compare beliefs (e.g. 'Bitcoin', 'AI', 'Twitter')..."
-                : mode === 'time'
-                ? `Ask Elon as of ${asOfDate} (e.g. 'What is the status of Falcon 9?')...`
-                : "Ask Elon Musk anything (e.g. 'How do you stay productive?')..."
-            }
-            maxLength={1000}
-            style={{
-              flex: 1,
-              backgroundColor: 'transparent',
-              border: 'none',
-              outline: 'none',
-              color: '#f1f5f9',
-              fontSize: '13.5px',
-              fontFamily: 'system-ui, -apple-system, sans-serif'
-            }}
-          />
-
-          {/* Send / Ask Button */}
-          <button
-            type="submit"
-            disabled={!input.trim() || isLoading}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '7px 16px',
-              backgroundColor: '#15803d',
-              color: '#ffffff',
-              borderRadius: '10px',
-              fontFamily: 'monospace',
-              fontSize: '12px',
-              fontWeight: 700,
-              border: 'none',
-              cursor: !input.trim() || isLoading ? 'not-allowed' : 'pointer',
-              opacity: !input.trim() || isLoading ? 0.4 : 1,
-              flexShrink: 0,
-              boxShadow: '0 4px 12px rgba(21, 128, 61, 0.4)'
-            }}
-          >
-            <span>ASK</span>
-            <Send size={12} />
-          </button>
-        </form>
-      </footer>
-
-      {/* ─── 5. SLIDEOUT SOURCES & MEMORY DRAWER ─── */}
-      {showSourcesPanel && (
-        <div 
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(8px)',
-            zIndex: 100,
-            display: 'flex',
-            justifyContent: 'flex-end'
-          }}
-          onClick={() => setShowSourcesPanel(false)}
-        >
-          <div 
-            style={{
-              width: '100%',
-              maxWidth: '420px',
-              height: '100%',
-              backgroundColor: '#0c1322',
-              borderLeft: '1px solid #1e293b',
-              padding: '24px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '16px',
-              boxSizing: 'border-box',
-              overflowY: 'auto'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1e293b', paddingBottom: '14px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Layers size={18} color="#38bdf8" />
-                <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#ffffff', fontFamily: 'monospace' }}>
-                  Verified Knowledge Sources
-                </h3>
-              </div>
-              <button 
-                onClick={() => setShowSourcesPanel(false)} 
-                style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px' }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace' }}>
-              Every response is synthesized strictly from verified primary sources:
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {activeSources.map((src) => (
-                <div 
-                  key={src.id}
-                  style={{
-                    padding: '12px',
-                    backgroundColor: '#090d16',
-                    border: '1px solid #1e293b',
-                    borderRadius: '12px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '4px'
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '10px', fontFamily: 'monospace', fontWeight: 700, color: '#4ade80' }}>
-                      {src.type}
-                    </span>
-                    <span style={{ fontSize: '10px', fontFamily: 'monospace', color: '#64748b' }}>
-                      {src.date}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: '12px', fontWeight: 700, color: '#f1f5f9' }}>
-                    {src.title}
-                  </div>
-                  <div style={{ fontSize: '11px', color: '#94a3b8', fontStyle: 'italic', lineHeight: 1.4 }}>
-                    "{src.excerpt}"
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px', fontFamily: 'monospace', color: '#64748b' }}>
-              <span>Swytchcode Provenance Engine</span>
-              <span style={{ color: '#4ade80' }}>● Grounded</span>
-            </div>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#4ade80' }}>
+              <CheckCircle2 size={10} /> Grounded v4.2
+            </span>
+            <span style={{ color: '#f3951f' }}>Swytchcode Protected</span>
           </div>
-        </div>
-      )}
+        </aside>
 
-      {/* ─── ABOUT PROJECT MODAL ─── */}
-      {showAboutModal && (
-        <div 
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0,0,0,0.85)',
-            backdropFilter: 'blur(8px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 100,
-            padding: '20px'
-          }}
-        >
-          <div 
-            style={{
-              backgroundColor: '#0f172a',
-              border: '1px solid #334155',
-              borderRadius: '16px',
-              padding: '24px',
-              maxWidth: '500px',
-              width: '100%',
-              boxShadow: '0 25px 50px rgba(0,0,0,0.8)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '16px'
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #334155', paddingBottom: '12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '20px' }}>🍉</span>
-                <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#ffffff' }}>
-                  About MuskMelon
-                </h3>
-              </div>
-              <button 
-                onClick={() => setShowAboutModal(false)} 
-                style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '16px' }}
-              >
-                ✕
-              </button>
-            </div>
-            
-            <p style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: 1.5, margin: 0 }}>
-              MuskMelon is a consent-based, version-controlled Knowledge Twin of Elon Musk built with Swytchcode API middleware, Kaggle tweet dataset (2010–2025), and claim-level Answer Receipts.
-            </p>
+      </main>
 
-            <div style={{ backgroundColor: '#090d16', border: '1px solid #1e293b', borderRadius: '12px', padding: '12px', fontSize: '11px', fontFamily: 'monospace', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div style={{ color: '#4ade80', fontWeight: 700 }}>Swytchcode 3-Integration Stack:</div>
-              <div style={{ color: '#cbd5e1' }}>• Google Drive (Approved knowledge ingestion)</div>
-              <div style={{ color: '#cbd5e1' }}>• Weaviate (Versioned semantic retrieval)</div>
-              <div style={{ color: '#cbd5e1' }}>• OpenAI / Gemini (Grounded response generation)</div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '8px' }}>
-              <button
-                onClick={() => setShowAboutModal(false)}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#15803d',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                  fontFamily: 'monospace',
-                  fontWeight: 700,
-                  cursor: 'pointer'
-                }}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* ─── MODAL (IF OPENED) ─── */}
+      {showReceiptModal && selectedReceipt && (
+        <AnswerReceiptModal
+          receipt={selectedReceipt}
+          onClose={() => setShowReceiptModal(false)}
+        />
       )}
 
     </div>
