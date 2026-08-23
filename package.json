@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:gdg-agent": "tsx scripts/test-gdg-agent.ts"
+    "test:gdg-agent": "tsx scripts/test-gdg-agent.ts",
+    "sync:weaviate": "tsx scripts/sync-weaviate-knowledge.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.46",
