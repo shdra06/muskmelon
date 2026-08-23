@@ -3,9 +3,12 @@ import { MUSK_COGNITIVE_SIGNATURE } from './cognitive-signature';
 import { TemporalChunk, AgentResponse, Message } from '../types';
 import { generateAnswerReceipt } from './answer-receipt';
 
-let openai: OpenAI | null = null;
-if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-') && !process.env.OPENAI_API_KEY.includes('...')) {
-  openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+function getOpenAIClient(): OpenAI | null {
+  const key = process.env.OPENAI_API_KEY;
+  if (key && key.startsWith('sk-') && !key.includes('...')) {
+    return new OpenAI({ apiKey: key });
+  }
+  return null;
 }
 
 /**
@@ -207,14 +210,15 @@ Current Mode: ${mode} ${asOfDate ? `(As of ${asOfDate})` : ''}
   }
 
   // 2. Try OpenAI API with history
-  if (openai) {
+  const openaiClient = getOpenAIClient();
+  if (openaiClient) {
     try {
       const formattedHistory = history.slice(-6).map(h => ({
         role: (h.role === 'assistant' ? 'assistant' : 'user') as 'assistant' | 'user',
         content: h.content
       }));
 
-      const response = await openai.chat.completions.create({
+      const response = await openaiClient.chat.completions.create({
         model: 'gpt-4o',
         temperature: 0.4,
         messages: [
