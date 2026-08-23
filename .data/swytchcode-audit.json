@@ -769,5 +769,396 @@
       "durationMs": 2492,
       "retryCount": 0
     }
+  },
+  {
+    "id": "6b682b2b-efc8-4a7d-a6bd-4531de038a3f",
+    "timestamp": "2026-08-23T10:34:08.491Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 19,
+      "hasHistory": false
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 2515,
+      "retryCount": 0
+    }
+  },
+  {
+    "id": "5ba711b8-ebd8-42ec-9f5a-86a80a218932",
+    "timestamp": "2026-08-23T10:34:32.243Z",
+    "toolName": "firecrawl.scrape",
+    "input": {
+      "url": "https://x.com/search?q=bhakk",
+      "query": "bhakk"
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow",
+      "ruleId": "allow-firecrawl"
+    },
+    "execution": {
+      "success": false,
+      "durationMs": 15129,
+      "retryCount": 0,
+      "error": "Swytchcode CLI not available. Install with 'npm install -g swytchcode' and run 'swy login'. Tool 'firecrawl.scrape' execution deferred."
+    }
+  },
+  {
+    "id": "e15b4776-7642-4e36-bac4-6f4d9924a937",
+    "timestamp": "2026-08-23T10:34:35.011Z",
+    "toolName": "weaviate.create_object",
+    "input": {
+      "class": "ElonMuskMemory",
+      "properties": {
+        "content": "[Wikipedia Public Record] Elon Reeve Musk is a businessman and former public official who is the CEO and largest shareholder of Tesla and SpaceX. Musk has been the wealthiest person in the world since 2025, and briefly became the only trillionaire in June 2026; as of August 14, 2026, Forbes estimates his net worth to be US$864 billion.",
+        "validFrom": "2026-08-23",
+        "validTo": "9999-12-31",
+        "source": "Wikipedia Verified Elon Musk Biography",
+        "sourceType": "document",
+        "topic": "biography"
+      },
+      "vector": []
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "no_match"
+    },
+    "execution": {
+      "success": false,
+      "durationMs": 1,
+      "retryCount": 0,
+      "error": "Swytchcode CLI not available. Install with 'npm install -g swytchcode' and run 'swy login'. Tool 'weaviate.create_object' execution deferred.",
+      "idempotencyKey": "swy_24715b9ca4c4faceb473fa6e"
+    }
+  },
+  {
+    "id": "0e61dfde-2b96-43c1-8215-600b8424a6ab",
+    "timestamp": "2026-08-23T10:34:36.907Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 5,
+      "hasHistory": true
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 19809,
+      "retryCount": 0
+    }
+  },
+  {
+    "id": "c8009f6b-7326-4d7b-898f-c23de9b1d061",
+    "timestamp": "2026-08-23T10:38:39.365Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 8,
+      "hasHistory": false
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 1616,
+      "retryCount": 0
+    }
+  },
+  {
+    "id": "0a35d23d-b05f-46ce-8937-a125c378daf3",
+    "timestamp": "2026-08-23T10:39:06.237Z",
+    "toolName": "firecrawl.scrape",
+    "input": {
+      "url": "https://x.com/search?q=rfrr",
+      "query": "rfrr"
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow",
+      "ruleId": "allow-firecrawl"
+    },
+    "execution": {
+      "success": false,
+      "durationMs": 15111,
+      "retryCount": 0,
+      "error": "Swytchcode CLI not available. Install with 'npm install -g swytchcode' and run 'swy login'. Tool 'firecrawl.scrape' execution deferred."
+    }
+  },
+  {
+    "id": "239f696c-c480-4203-9d8b-68082858665e",
+    "timestamp": "2026-08-23T10:39:09.275Z",
+    "toolName": "weaviate.create_object",
+    "input": {
+      "class": "ElonMuskMemory",
+      "properties": {
+        "content": "[Wikipedia Public Record] Elon Reeve Musk is a businessman and former public official who is the CEO and largest shareholder of Tesla and SpaceX. Musk has been the wealthiest person in the world since 2025, and briefly became the only trillionaire in June 2026; as of August 14, 2026, Forbes estimates his net worth to be US$864 billion.",
+        "validFrom": "2026-08-23",
+        "validTo": "9999-12-31",
+        "source": "Wikipedia Verified Elon Musk Biography",
+        "sourceType": "document",
+        "topic": "biography"
+      },
+      "vector": []
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "no_match"
+    },
+    "execution": {
+      "success": false,
+      "durationMs": 2,
+      "retryCount": 0,
+      "error": "Swytchcode CLI not available. Install with 'npm install -g swytchcode' and run 'swy login'. Tool 'weaviate.create_object' execution deferred.",
+      "idempotencyKey": "swy_05cb3099329eb9cda1c67fa5"
+    }
+  },
+  {
+    "id": "9ddaa646-5795-4f02-a70c-b573b4f08c24",
+    "timestamp": "2026-08-23T10:39:10.346Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 4,
+      "hasHistory": true
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 19232,
+      "retryCount": 0
+    }
+  },
+  {
+    "id": "2cd43faf-8d81-4614-8b66-798ff08ec22a",
+    "timestamp": "2026-08-23T10:40:08.503Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 8,
+      "hasHistory": true
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 2224,
+      "retryCount": 0
+    }
+  },
+  {
+    "id": "eff2717c-85e7-466d-855e-7036e89cad8a",
+    "timestamp": "2026-08-23T10:46:50.692Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 8,
+      "hasHistory": false
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 1842,
+      "retryCount": 0
+    }
+  },
+  {
+    "id": "af92d913-260f-49bd-acad-3b0a57d4a692",
+    "timestamp": "2026-08-23T10:47:05.538Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 24,
+      "hasHistory": true
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 2522,
+      "retryCount": 0
+    }
+  },
+  {
+    "id": "16c81100-4eea-42c9-a3b5-3adb5d441856",
+    "timestamp": "2026-08-23T10:49:03.473Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 15,
+      "hasHistory": true
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 2117,
+      "retryCount": 0
+    }
+  },
+  {
+    "id": "de921f11-d991-4c5d-b391-ff1fd24f21fd",
+    "timestamp": "2026-08-23T10:49:17.158Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 8,
+      "hasHistory": true
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 1804,
+      "retryCount": 0
+    }
+  },
+  {
+    "id": "7461a576-6971-44b6-8429-b1a0370f5eb3",
+    "timestamp": "2026-08-23T10:54:53.509Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 8,
+      "hasHistory": false
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 1178,
+      "retryCount": 0
+    }
+  },
+  {
+    "id": "c2dd4f36-4cfb-4006-b342-fc67e51acf3a",
+    "timestamp": "2026-08-23T10:56:06.413Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 8,
+      "hasHistory": true
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 2374,
+      "retryCount": 0
+    }
+  },
+  {
+    "id": "b9800e1c-194b-4108-bd25-defeeef789ed",
+    "timestamp": "2026-08-23T10:56:15.312Z",
+    "toolName": "firecrawl.scrape",
+    "input": {
+      "url": "https://x.com/search?q=result%20kitne%20der%20me%20aayega",
+      "query": "result kitne der me aayega"
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow",
+      "ruleId": "allow-firecrawl"
+    },
+    "execution": {
+      "success": false,
+      "durationMs": 1,
+      "retryCount": 0,
+      "error": "Swytchcode CLI not available. Install with 'npm install -g swytchcode' and run 'swy login'. Tool 'firecrawl.scrape' execution deferred."
+    }
+  },
+  {
+    "id": "a1986b14-ecf3-48ca-b730-5694a21f94c0",
+    "timestamp": "2026-08-23T10:56:16.835Z",
+    "toolName": "weaviate.create_object",
+    "input": {
+      "class": "ElonMuskMemory",
+      "properties": {
+        "content": "[Wikipedia Public Record] Elon Reeve Musk is a businessman and former public official who is the CEO and largest shareholder of Tesla and SpaceX. Musk has been the wealthiest person in the world since 2025, and briefly became the only trillionaire in June 2026; as of August 14, 2026, Forbes estimates his net worth to be US$864 billion.",
+        "validFrom": "2026-08-23",
+        "validTo": "9999-12-31",
+        "source": "Wikipedia Verified Elon Musk Biography",
+        "sourceType": "document",
+        "topic": "biography"
+      },
+      "vector": []
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "no_match"
+    },
+    "execution": {
+      "success": false,
+      "durationMs": 1,
+      "retryCount": 0,
+      "error": "Swytchcode CLI not available. Install with 'npm install -g swytchcode' and run 'swy login'. Tool 'weaviate.create_object' execution deferred.",
+      "idempotencyKey": "swy_4985459f806e3a731c51ee6b"
+    }
+  },
+  {
+    "id": "252d06eb-71e0-4f50-a8bc-faceb42e846a",
+    "timestamp": "2026-08-23T10:56:17.907Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 26,
+      "hasHistory": true
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 2606,
+      "retryCount": 0
+    }
+  },
+  {
+    "id": "35004dfc-0026-4046-9254-9e598deec65a",
+    "timestamp": "2026-08-23T10:56:29.781Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 21,
+      "hasHistory": true
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 2174,
+      "retryCount": 0
+    }
   }
 ]

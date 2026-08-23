@@ -453,5 +453,44 @@
       "topic": "SpaceX & Mars Vision",
       "chunkIndex": 34
     }
+  },
+  {
+    "id": "web_wiki_1787481274088",
+    "content": "[Wikipedia Public Record] Elon Reeve Musk is a businessman and former public official who is the CEO and largest shareholder of Tesla and SpaceX. Musk has been the wealthiest person in the world since 2025, and briefly became the only trillionaire in June 2026; as of August 14, 2026, Forbes estimates his net worth to be US$864 billion.",
+    "embedding": [],
+    "commitId": "commit_web_2026-08-23",
+    "validFrom": "2026-08-23",
+    "metadata": {
+      "source": "Wikipedia Verified Elon Musk Biography",
+      "sourceType": "document",
+      "topic": "biography",
+      "chunkIndex": 0
+    }
+  },
+  {
+    "id": "web_wiki_1787481548497",
+    "content": "[Wikipedia Public Record] Elon Reeve Musk is a businessman and former public official who is the CEO and largest shareholder of Tesla and SpaceX. Musk has been the wealthiest person in the world since 2025, and briefly became the only trillionaire in June 2026; as of August 14, 2026, Forbes estimates his net worth to be US$864 billion.",
+    "embedding": [],
+    "commitId": "commit_web_2026-08-23",
+    "validFrom": "2026-08-23",
+    "metadata": {
+      "source": "Wikipedia Verified Elon Musk Biography",
+      "sourceType": "document",
+      "topic": "biography",
+      "chunkIndex": 0
+    }
+  },
+  {
+    "id": "web_wiki_1787482575770",
+    "content": "[Wikipedia Public Record] Elon Reeve Musk is a businessman and former public official who is the CEO and largest shareholder of Tesla and SpaceX. Musk has been the wealthiest person in the world since 2025, and briefly became the only trillionaire in June 2026; as of August 14, 2026, Forbes estimates his net worth to be US$864 billion.",
+    "embedding": [],
+    "commitId": "commit_web_2026-08-23",
+    "validFrom": "2026-08-23",
+    "metadata": {
+      "source": "Wikipedia Verified Elon Musk Biography",
+      "sourceType": "document",
+      "topic": "biography",
+      "chunkIndex": 0
+    }
   }
 ]
