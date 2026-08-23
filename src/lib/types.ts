@@ -128,3 +128,29 @@ export interface ConsentRecord {
   authorizedBy: string;
   accessLevel: 'read' | 'write';
 }
+
+// Swytchcode Execution Pipeline
+export interface SwytchcodeExecution {
+  toolName: string;
+  input: Record<string, unknown>;
+  policyResult: {
+    allowed: boolean;
+    action: string;
+    ruleId?: string;
+    message?: string;
+  };
+  execution: {
+    success: boolean;
+    durationMs: number;
+    retryCount: number;
+    error?: string;
+    idempotencyKey?: string;
+  };
+}
+
+export interface SwytchcodeStatus {
+  cliAvailable: boolean;
+  environment: string;
+  tools: { name: string; description: string; status: string; policyAction: string }[];
+}
+
