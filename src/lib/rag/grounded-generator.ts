@@ -9,6 +9,31 @@ if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-') &
 }
 
 /**
+ * Call Google Gemini LLM API if GEMINI_API_KEY is configured
+ */
+async function callGeminiAPI(systemPrompt: string, userQuery: string): Promise<string | null> {
+  const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  if (!geminiKey || geminiKey.includes('...')) return null;
+
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: systemPrompt }] },
+        contents: [{ role: 'user', parts: [{ text: userQuery }] }],
+        generationConfig: { temperature: 0.4 }
+      })
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Intelligent, authentic Elon Musk conversational response generator.
  * Strictly adheres to first-principles thinking, Musk's verified stances, and speech patterns.
  */
@@ -93,7 +118,7 @@ function generateLocalElonResponse(query: string, contextChunks: TemporalChunk[]
 }
 
 /**
- * Grounded generator for Elon Musk persona.
+ * Grounded generator for Elon Musk persona supporting OpenAI & Gemini LLM APIs.
  */
 export async function generateGroundedResponse(
   query: string,
@@ -103,9 +128,7 @@ export async function generateGroundedResponse(
 ): Promise<AgentResponse> {
   const contextText = contextChunks.map((c, i) => `[Source ${i + 1}, Date: ${c.validFrom}] ${c.content}`).join('\n\n');
 
-  if (openai) {
-    try {
-      const systemPrompt = `You are a grounded knowledge twin of Elon Musk (MuskMelon).
+  const systemPrompt = `You are a grounded knowledge twin of Elon Musk (MuskMelon).
 Your cognitive signature:
 - Vocabulary: ${MUSK_COGNITIVE_SIGNATURE.vocabulary.join(', ')}
 - Reasoning: ${MUSK_COGNITIVE_SIGNATURE.reasoningStyle}
@@ -122,6 +145,9 @@ ${contextText}
 Current Mode: ${mode} ${asOfDate ? `(As of ${asOfDate})` : ''}
 `;
 
+  // 1. Try OpenAI if API Key present
+  if (openai) {
+    try {
       const response = await openai.chat.completions.create({
         model: 'gpt-4o',
         temperature: 0.4,
@@ -131,20 +157,32 @@ Current Mode: ${mode} ${asOfDate ? `(As of ${asOfDate})` : ''}
         ]
       });
 
-      const answer = response.choices[0].message?.content || 'I could not generate a response.';
-      const receipt = await generateAnswerReceipt(query, answer, contextChunks, mode as any, asOfDate);
-
-      return {
-        message: answer,
-        receipt,
-        confidence: receipt.groundingConfidence
-      };
+      const answer = response.choices[0].message?.content;
+      if (answer) {
+        const receipt = await generateAnswerReceipt(query, answer, contextChunks, mode as any, asOfDate);
+        return {
+          message: answer,
+          receipt,
+          confidence: receipt.groundingConfidence
+        };
+      }
     } catch (error) {
-      console.warn('OpenAI Chat Completion fallback to local deterministic generator:', error);
+      console.warn('OpenAI Chat Completion fallback:', error);
     }
   }
 
-  // Fast, deterministic, rich grounded response generator
+  // 2. Try Google Gemini if GEMINI_API_KEY present
+  const geminiAnswer = await callGeminiAPI(systemPrompt, query);
+  if (geminiAnswer) {
+    const receipt = await generateAnswerReceipt(query, geminiAnswer, contextChunks, mode as any, asOfDate);
+    return {
+      message: geminiAnswer,
+      receipt,
+      confidence: receipt.groundingConfidence
+    };
+  }
+
+  // 3. High-precision deterministic local reasoning engine
   const answer = generateLocalElonResponse(query, contextChunks, mode, asOfDate);
   const receipt = await generateAnswerReceipt(query, answer, contextChunks, mode as any, asOfDate);
 

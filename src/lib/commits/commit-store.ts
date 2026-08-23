@@ -97,3 +97,13 @@ export async function getStats(): Promise<{ total: number; topics: Record<string
     topics
   };
 }
+
+export const CommitStore = {
+  addCommit,
+  getCommit,
+  getAllCommits,
+  getCommitsByDateRange,
+  getCommitsByTopic,
+  getCommitTimeline,
+  getStats
+};

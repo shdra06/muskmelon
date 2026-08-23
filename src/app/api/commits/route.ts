@@ -1,61 +1,64 @@
 import { NextResponse } from 'next/server';
-import { getAllCommits, getCommitsByTopic, getCommitsByDateRange, getCommitTimeline, getStats } from '@/lib/commits/commit-store';
+import { CommitStore } from '@/lib/commits/commit-store';
+import { recordExecution } from '@/lib/swytchcode/telemetry';
 
 /**
  * GET /api/commits
- * Retrieve real Knowledge Commits from the commit store.
- * Query params: ?topic=AI&from=2023-01-01&to=2024-01-01&timeline=true&stats=true
+ * Retrieve Knowledge Commits timeline with Swytchcode telemetry.
  */
 export async function GET(req: Request) {
+  const startTime = Date.now();
+
   try {
     const { searchParams } = new URL(req.url);
-    const topic = searchParams.get('topic');
     const from = searchParams.get('from');
     const to = searchParams.get('to');
-    const showTimeline = searchParams.get('timeline') === 'true';
-    const showStats = searchParams.get('stats') === 'true';
-
-    if (showStats) {
-      const stats = await getStats();
-      return NextResponse.json({ stats });
-    }
-
-    if (showTimeline) {
-      const timeline = await getCommitTimeline();
-      return NextResponse.json({
-        commits: timeline.map(c => ({
-          id: c.id,
-          date: c.timestamp,
-          topic: c.topic,
-          source: c.source,
-          sourceType: c.sourceType,
-          excerpt: c.content.substring(0, 150) + (c.content.length > 150 ? '...' : '')
-        }))
-      });
-    }
+    const topic = searchParams.get('topic');
 
     let commits;
-    if (topic) {
-      commits = await getCommitsByTopic(topic);
-    } else if (from && to) {
-      commits = await getCommitsByDateRange(from, to);
+
+    if (from && to) {
+      commits = await CommitStore.getCommitsByDateRange(from, to);
+    } else if (topic) {
+      commits = await CommitStore.getCommitsByTopic(topic);
     } else {
-      commits = await getAllCommits();
+      commits = await CommitStore.getAllCommits();
     }
 
-    return NextResponse.json({
-      total: commits.length,
-      commits: commits.map(c => ({
-        id: c.id,
-        date: c.timestamp,
-        topic: c.topic,
-        source: c.source,
-        sourceType: c.sourceType,
-        excerpt: c.content.substring(0, 150) + (c.content.length > 150 ? '...' : '')
-      }))
+    const stats = await CommitStore.getStats();
+
+    // Record commits query execution in Swytchcode telemetry
+    await recordExecution({
+      toolName: 'mindcommit.commits_query',
+      input: { from, to, topic, totalCommits: commits.length },
+      policyResult: { allowed: true, action: 'allow' },
+      execution: {
+        success: true,
+        durationMs: Date.now() - startTime,
+        retryCount: 0
+      }
     });
-  } catch (error: unknown) {
-    console.error('Commits API error:', error);
-    return NextResponse.json({ error: 'Failed to fetch commits' }, { status: 500 });
+
+    return NextResponse.json({
+      commits,
+      stats,
+      total: commits.length
+    });
+  } catch (error: any) {
+    console.error('API /api/commits error:', error);
+
+    await recordExecution({
+      toolName: 'mindcommit.commits_query',
+      input: { error: true },
+      policyResult: { allowed: true, action: 'allow' },
+      execution: {
+        success: false,
+        durationMs: Date.now() - startTime,
+        retryCount: 0,
+        error: error.message || 'Failed to fetch commits'
+      }
+    }).catch(() => {});
+
+    return NextResponse.json({ error: error.message || 'Failed to fetch commits' }, { status: 500 });
   }
 }
