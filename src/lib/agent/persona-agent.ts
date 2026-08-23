@@ -5,6 +5,7 @@ import { generateGroundedResponse } from '../rag/grounded-generator';
 export class PersonaAgent {
   /**
    * Main orchestrator agent supporting THREE MODES: now, time-lens, belief-diff.
+   * Feeds full multi-turn session history and vector-matched knowledge chunks to the LLM.
    */
   static async chat(request: ChatRequest): Promise<AgentResponse> {
     const contextChunks = await retrieveContext(
@@ -19,7 +20,8 @@ export class PersonaAgent {
       request.message,
       contextChunks,
       request.mode,
-      request.asOfDate
+      request.asOfDate,
+      request.history
     );
 
     return response;

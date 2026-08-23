@@ -1,6 +1,6 @@
 import { OpenAI } from 'openai';
 import { MUSK_COGNITIVE_SIGNATURE } from './cognitive-signature';
-import { TemporalChunk, AgentResponse } from '../types';
+import { TemporalChunk, AgentResponse, Message } from '../types';
 import { generateAnswerReceipt } from './answer-receipt';
 
 let openai: OpenAI | null = null;
@@ -9,14 +9,18 @@ if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-') &
 }
 
 /**
- * Call OpenRouter API if OPENROUTER_API_KEY is configured
- * Supports any model: openai/gpt-4o, anthropic/claude-3.5-sonnet, deepseek/deepseek-chat, etc.
+ * Call OpenRouter API with multi-turn session history
  */
-async function callOpenRouterAPI(systemPrompt: string, userQuery: string): Promise<string | null> {
+async function callOpenRouterAPI(systemPrompt: string, userQuery: string, history: Message[] = []): Promise<string | null> {
   const openRouterKey = process.env.OPENROUTER_API_KEY;
   if (!openRouterKey || openRouterKey.includes('...')) return null;
 
   try {
+    const formattedHistory = history.slice(-6).map(h => ({
+      role: h.role === 'assistant' ? 'assistant' : 'user',
+      content: h.content
+    }));
+
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -30,6 +34,7 @@ async function callOpenRouterAPI(systemPrompt: string, userQuery: string): Promi
         temperature: 0.4,
         messages: [
           { role: 'system', content: systemPrompt },
+          ...formattedHistory,
           { role: 'user', content: userQuery }
         ]
       })
@@ -45,19 +50,27 @@ async function callOpenRouterAPI(systemPrompt: string, userQuery: string): Promi
 }
 
 /**
- * Call Google Gemini LLM API if GEMINI_API_KEY is configured
+ * Call Google Gemini LLM API with multi-turn session history
  */
-async function callGeminiAPI(systemPrompt: string, userQuery: string): Promise<string | null> {
+async function callGeminiAPI(systemPrompt: string, userQuery: string, history: Message[] = []): Promise<string | null> {
   const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
   if (!geminiKey || geminiKey.includes('...')) return null;
 
   try {
+    const contents = [
+      ...history.slice(-4).map(h => ({
+        role: h.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: h.content }]
+      })),
+      { role: 'user', parts: [{ text: userQuery }] }
+    ];
+
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         system_instruction: { parts: [{ text: systemPrompt }] },
-        contents: [{ role: 'user', parts: [{ text: userQuery }] }],
+        contents,
         generationConfig: { temperature: 0.4 }
       })
     });
@@ -154,13 +167,14 @@ function generateLocalElonResponse(query: string, contextChunks: TemporalChunk[]
 }
 
 /**
- * Grounded generator for Elon Musk persona supporting OpenRouter, OpenAI, and Gemini.
+ * Grounded generator for Elon Musk persona supporting OpenRouter, OpenAI, and Gemini with full multi-turn session history.
  */
 export async function generateGroundedResponse(
   query: string,
   contextChunks: TemporalChunk[],
   mode: string,
-  asOfDate?: string
+  asOfDate?: string,
+  history: Message[] = []
 ): Promise<AgentResponse> {
   const contextText = contextChunks.map((c, i) => `[Source ${i + 1}, Date: ${c.validFrom}] ${c.content}`).join('\n\n');
 
@@ -181,8 +195,8 @@ ${contextText}
 Current Mode: ${mode} ${asOfDate ? `(As of ${asOfDate})` : ''}
 `;
 
-  // 1. Try OpenRouter API if configured
-  const openRouterAnswer = await callOpenRouterAPI(systemPrompt, query);
+  // 1. Try OpenRouter API with history
+  const openRouterAnswer = await callOpenRouterAPI(systemPrompt, query, history);
   if (openRouterAnswer) {
     const receipt = await generateAnswerReceipt(query, openRouterAnswer, contextChunks, mode as any, asOfDate);
     return {
@@ -192,14 +206,20 @@ Current Mode: ${mode} ${asOfDate ? `(As of ${asOfDate})` : ''}
     };
   }
 
-  // 2. Try OpenAI API if configured
+  // 2. Try OpenAI API with history
   if (openai) {
     try {
+      const formattedHistory = history.slice(-6).map(h => ({
+        role: (h.role === 'assistant' ? 'assistant' : 'user') as 'assistant' | 'user',
+        content: h.content
+      }));
+
       const response = await openai.chat.completions.create({
         model: 'gpt-4o',
         temperature: 0.4,
         messages: [
           { role: 'system', content: systemPrompt },
+          ...formattedHistory,
           { role: 'user', content: query }
         ]
       });
@@ -218,8 +238,8 @@ Current Mode: ${mode} ${asOfDate ? `(As of ${asOfDate})` : ''}
     }
   }
 
-  // 3. Try Google Gemini API if configured
-  const geminiAnswer = await callGeminiAPI(systemPrompt, query);
+  // 3. Try Google Gemini API with history
+  const geminiAnswer = await callGeminiAPI(systemPrompt, query, history);
   if (geminiAnswer) {
     const receipt = await generateAnswerReceipt(query, geminiAnswer, contextChunks, mode as any, asOfDate);
     return {
