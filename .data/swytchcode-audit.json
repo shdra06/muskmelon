@@ -369,5 +369,63 @@
       "error": "Swytchcode CLI not available. Install with 'npm install -g swytchcode' and run 'swy login'. Tool 'gmail.send_email' execution deferred.",
       "idempotencyKey": "swy_9e2432235a988b15af5ed0bb"
     }
+  },
+  {
+    "id": "d2faf3c1-2260-4797-b1c5-5d8518b5166d",
+    "timestamp": "2026-08-23T09:09:02.739Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 8,
+      "hasHistory": false
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 16,
+      "retryCount": 0
+    }
+  },
+  {
+    "id": "078af61b-b0ca-411a-8dba-634ba8e2ac45",
+    "timestamp": "2026-08-23T09:10:21.497Z",
+    "toolName": "firecrawl.scrape",
+    "input": {
+      "url": "https://x.com/elonmusk",
+      "filter": "What is the roadmap for Mars colonization?"
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow",
+      "ruleId": "allow-firecrawl"
+    },
+    "execution": {
+      "success": false,
+      "durationMs": 15072,
+      "retryCount": 0,
+      "error": "Swytchcode CLI not available. Install with 'npm install -g swytchcode' and run 'swy login'. Tool 'firecrawl.scrape' execution deferred."
+    }
+  },
+  {
+    "id": "572e7f1d-4023-477e-9c0b-81571562a5ed",
+    "timestamp": "2026-08-23T09:10:21.505Z",
+    "toolName": "mindcommit.end_to_end_pipeline",
+    "input": {
+      "query": "What is the roadmap for Mars colonization?",
+      "channelsUsed": [],
+      "options": {}
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 15081,
+      "retryCount": 0
+    }
   }
 ]
