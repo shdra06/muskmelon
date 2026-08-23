@@ -1,36 +1,122 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MindCommit — The Version-Controlled Knowledge Twin
 
-## Getting Started
+> **Git for human knowledge**: ask what Elon Musk knows, see how his thinking evolved, and verify every answer.
 
-First, run the development server:
+## 🧠 What is MindCommit?
+
+MindCommit creates a consent-based, version-controlled knowledge twin that can answer as a person knew at a selected point in time, reveal how their thinking changed, and prove every response through a traceable **Answer Receipt**.
+
+**Current Subject**: Elon Musk (tweets 2010–2025 + public statements)
+
+### Three Modes
+
+| Mode | What it Does |
+|------|-------------|
+| **Now Mode** | Answers using the latest verified knowledge |
+| **Time Lens** | Answers exactly as the data supported at a selected date |
+| **Belief Diff** | Compares two periods and explains what changed |
+
+### Key Features
+
+- 🔒 **Cognitive Version Control** — Knowledge stored as evolving, timestamped commits
+- 📊 **Belief Diff** — Compare how positions changed between two dates
+- 🧱 **Knowledge–Voice Firewall** — Style shapes expression but never introduces facts
+- ⚡ **Temporal Contradiction Engine** — Conflicting statements placed on a timeline
+- 🧾 **Answer Receipts** — Every response includes inspectable claim-level provenance
+- 🗺️ **Knowledge Boundary Map** — Shows which topics are covered deeply vs. partially
+- 🛡️ **Trap-Question Defence** — Detects leading questions with false premises
+- 🤖 **AI Identity Watermark** — Every response identified as an AI reconstruction
+
+## 🔧 Powered by Swytchcode
+
+Swytchcode is the **backbone** of MindCommit — every external API call flows through it.
+
+**10 integrations, 30+ tools, 16 policy rules**
+
+See [SWYTCHCODE.md](./SWYTCHCODE.md) for the complete integration documentation.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Install Swytchcode
+npm install -g swytchcode
+
+# Set up integrations
+swy init && swy login
+swy get googledrive notion github youtube gmail slack telegram resend firecrawl google_calendar
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Quick Start
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# 1. Clone and install
+git clone <repo>
+cd vibewrite
+npm install
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# 2. Configure
+cp .env.example .env.local
+# Add your OPENAI_API_KEY
 
-## Learn More
+# 3. Run
+npm run dev
 
-To learn more about Next.js, take a look at the following resources:
+# 4. Open
+# http://localhost:3000       — Chat with the Knowledge Twin
+# http://localhost:3000/admin — Upload tweets CSV & manage sources
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📁 Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+vibewrite/
+├── .swytchcode/                    # Swytchcode configuration
+│   ├── tooling.json                # 10 integrations, 30+ tools
+│   └── policies.json               # 16 policy rules
+├── data/musk/                      # Elon Musk knowledge dataset
+│   ├── biography.json              # Life timeline
+│   ├── belief-evolution.md         # Position changes over time
+│   └── sample-tweets.csv           # Sample tweets for testing
+├── src/
+│   ├── app/                        # Next.js App Router
+│   │   ├── page.tsx                # Main chat UI (3 modes)
+│   │   ├── admin/page.tsx          # Admin panel
+│   │   └── api/                    # API routes
+│   │       ├── chat/route.ts       # Chat endpoint
+│   │       ├── ingest/route.ts     # File ingestion
+│   │       ├── commits/route.ts    # Knowledge commits
+│   │       └── diff/route.ts       # Belief diff
+│   ├── components/                 # React components
+│   │   ├── mode-selector.tsx       # Now | Time Lens | Belief Diff
+│   │   ├── chat-message.tsx        # Chat messages with receipts
+│   │   ├── answer-receipt.tsx      # Provenance display
+│   │   ├── belief-diff-viewer.tsx  # Side-by-side diff
+│   │   ├── commit-timeline.tsx     # Timeline visualization
+│   │   ├── sources-panel.tsx       # Source chunks panel
+│   │   └── upload-zone.tsx         # File upload
+│   └── lib/                        # Backend logic
+│       ├── agent/                   # Main persona agent
+│       ├── commits/                 # Knowledge Commit Engine
+│       ├── ingest/                  # Document parsing + chunking
+│       ├── rag/                     # RAG pipeline + Answer Receipts
+│       ├── swytchcode/             # Swytchcode integration
+│       ├── temporal/               # Temporal index + Contradiction Engine
+│       ├── vectorstore/            # In-memory vector store
+│       └── types.ts                # Type system
+├── SWYTCHCODE.md                   # Swytchcode integration docs
+└── README.md                       # This file
+```
 
-## Deploy on Vercel
+## 🛠️ Tech Stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Next.js 15, React 19, TailwindCSS |
+| Backend | Node.js, TypeScript |
+| AI/LLM | OpenAI GPT-4o |
+| Embeddings | OpenAI text-embedding-3-small |
+| Vector Store | In-memory (hackathon) / Weaviate (production) |
+| API Layer | **Swytchcode** (CLI + MCP Server) |
+| Dataset | Elon Musk Tweets 2010–2025 (Kaggle) |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📄 License
+
+Built for NSUT Hackathon 2026.
