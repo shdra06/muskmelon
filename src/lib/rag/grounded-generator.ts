@@ -9,6 +9,42 @@ if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-') &
 }
 
 /**
+ * Call OpenRouter API if OPENROUTER_API_KEY is configured
+ * Supports any model: openai/gpt-4o, anthropic/claude-3.5-sonnet, deepseek/deepseek-chat, etc.
+ */
+async function callOpenRouterAPI(systemPrompt: string, userQuery: string): Promise<string | null> {
+  const openRouterKey = process.env.OPENROUTER_API_KEY;
+  if (!openRouterKey || openRouterKey.includes('...')) return null;
+
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${openRouterKey}`,
+        'HTTP-Referer': 'https://github.com/shdra06/muskmelon',
+        'X-Title': 'MuskMelon - Elon Musk Knowledge Twin'
+      },
+      body: JSON.stringify({
+        model: 'openai/gpt-4o',
+        temperature: 0.4,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userQuery }
+        ]
+      })
+    });
+
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.choices?.[0]?.message?.content || null;
+  } catch (error) {
+    console.warn('OpenRouter API call error:', error);
+    return null;
+  }
+}
+
+/**
  * Call Google Gemini LLM API if GEMINI_API_KEY is configured
  */
 async function callGeminiAPI(systemPrompt: string, userQuery: string): Promise<string | null> {
@@ -118,7 +154,7 @@ function generateLocalElonResponse(query: string, contextChunks: TemporalChunk[]
 }
 
 /**
- * Grounded generator for Elon Musk persona supporting OpenAI & Gemini LLM APIs.
+ * Grounded generator for Elon Musk persona supporting OpenRouter, OpenAI, and Gemini.
  */
 export async function generateGroundedResponse(
   query: string,
@@ -145,7 +181,18 @@ ${contextText}
 Current Mode: ${mode} ${asOfDate ? `(As of ${asOfDate})` : ''}
 `;
 
-  // 1. Try OpenAI if API Key present
+  // 1. Try OpenRouter API if configured
+  const openRouterAnswer = await callOpenRouterAPI(systemPrompt, query);
+  if (openRouterAnswer) {
+    const receipt = await generateAnswerReceipt(query, openRouterAnswer, contextChunks, mode as any, asOfDate);
+    return {
+      message: openRouterAnswer,
+      receipt,
+      confidence: receipt.groundingConfidence || 0.95
+    };
+  }
+
+  // 2. Try OpenAI API if configured
   if (openai) {
     try {
       const response = await openai.chat.completions.create({
@@ -163,7 +210,7 @@ Current Mode: ${mode} ${asOfDate ? `(As of ${asOfDate})` : ''}
         return {
           message: answer,
           receipt,
-          confidence: receipt.groundingConfidence
+          confidence: receipt.groundingConfidence || 0.95
         };
       }
     } catch (error) {
@@ -171,18 +218,18 @@ Current Mode: ${mode} ${asOfDate ? `(As of ${asOfDate})` : ''}
     }
   }
 
-  // 2. Try Google Gemini if GEMINI_API_KEY present
+  // 3. Try Google Gemini API if configured
   const geminiAnswer = await callGeminiAPI(systemPrompt, query);
   if (geminiAnswer) {
     const receipt = await generateAnswerReceipt(query, geminiAnswer, contextChunks, mode as any, asOfDate);
     return {
       message: geminiAnswer,
       receipt,
-      confidence: receipt.groundingConfidence
+      confidence: receipt.groundingConfidence || 0.95
     };
   }
 
-  // 3. High-precision deterministic local reasoning engine
+  // 4. High-precision deterministic local reasoning engine
   const answer = generateLocalElonResponse(query, contextChunks, mode, asOfDate);
   const receipt = await generateAnswerReceipt(query, answer, contextChunks, mode as any, asOfDate);
 
