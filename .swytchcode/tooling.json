@@ -1,25 +1,33 @@
 {
   "project": "muskmelon-knowledge-twin",
   "version": "1.0.0",
-  "description": "MindCommit (MuskMelon) - Version-Controlled Knowledge Twin of Elon Musk",
+  "description": "MindCommit (MuskMelon) - Version-Controlled Knowledge Twin of Elon Musk with Swytchcode Execution Layer",
   "mode": "development",
   "editor": "cursor",
   "integrations": [
+    {
+      "name": "stripe",
+      "description": "Stripe payment and refund processing with policy guardrails",
+      "tools": [
+        "stripe.refunds.create",
+        "stripe.customers.retrieve"
+      ]
+    },
+    {
+      "name": "gmail",
+      "description": "Send Answer Receipt emails and notification messages",
+      "tools": [
+        "gmail.send_email",
+        "gmail.list_messages",
+        "gmail.get_message"
+      ]
+    },
     {
       "name": "googledrive",
       "description": "Sync approved documents and historical text for knowledge commits",
       "tools": [
         "googledrive.list_files",
         "googledrive.download_file"
-      ]
-    },
-    {
-      "name": "gmail",
-      "description": "Send Answer Receipt emails and read messages for knowledge ingestion",
-      "tools": [
-        "gmail.send_email",
-        "gmail.list_messages",
-        "gmail.get_message"
       ]
     },
     {

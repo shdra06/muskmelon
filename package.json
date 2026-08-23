@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:gdg-agent": "tsx scripts/test-gdg-agent.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.46",
@@ -33,6 +34,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.2",
     "tailwindcss": "^4",
+    "tsx": "^4.23.12",
     "typescript": "^5"
   }
 }

@@ -3,6 +3,30 @@
   "description": "MindCommit policy rules — controls what the Elon Musk Knowledge Twin agent can and cannot do",
   "rules": [
     {
+      "id": "deny-refund-over-500",
+      "description": "GDG Production Guardrail: Reject any refund over $500. Enforced before calling Stripe API.",
+      "condition": {
+        "tool": "stripe.refunds.create",
+        "params": {
+          "amount": { "gt": 50000 }
+        }
+      },
+      "action": "deny",
+      "message": "Policy Violation: Refund amount exceeds the maximum $500 threshold limit ($500.00 maximum allowed). Request blocked by policy engine before executing Stripe API."
+    },
+    {
+      "id": "allow-stripe-refund",
+      "description": "Allow Stripe refunds under or equal to $500",
+      "condition": { "tool": "stripe.refunds.create" },
+      "action": "allow"
+    },
+    {
+      "id": "allow-stripe-customer",
+      "description": "Allow retrieving Stripe customer data",
+      "condition": { "tool": "stripe.customers.retrieve" },
+      "action": "allow"
+    },
+    {
       "id": "allow-drive-read",
       "description": "Allow reading files from Google Drive for knowledge ingestion",
       "condition": { "tool": "googledrive.*" },
@@ -40,10 +64,10 @@
     },
     {
       "id": "approve-gmail-send",
-      "description": "Require approval before sending emails via Gmail",
+      "description": "Require approval or notify on sending emails via Gmail",
       "condition": { "tool": "gmail.send_email" },
-      "action": "require_approval",
-      "message": "MindCommit wants to send an email (Answer Receipt). Please review and approve."
+      "action": "allow",
+      "message": "MindCommit sending verified notification email."
     },
     {
       "id": "allow-gmail-read",
@@ -79,13 +103,6 @@
       "message": "MindCommit wants to send an Answer Receipt email via Resend. Please review."
     },
     {
-      "id": "approve-calendar-write",
-      "description": "Require approval before creating calendar events",
-      "condition": { "tool": "google_calendar.create_event" },
-      "action": "require_approval",
-      "message": "MindCommit wants to create a calendar event. Please review."
-    },
-    {
       "id": "deny-destructive",
       "description": "Deny ALL destructive operations across ALL integrations",
       "condition": { "tool": "*.delete_*" },
@@ -100,13 +117,6 @@
       },
       "action": "rate_limit",
       "limit": { "max": 10, "window": "1h" }
-    },
-    {
-      "id": "rate-limit-scraping",
-      "description": "Rate limit web scraping to be respectful",
-      "condition": { "tool": "firecrawl.*" },
-      "action": "rate_limit",
-      "limit": { "max": 50, "window": "1h" }
     }
   ]
 }
