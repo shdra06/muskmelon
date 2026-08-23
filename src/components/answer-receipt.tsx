@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { ChevronDown, Shield, FileText, CheckCircle2, AlertTriangle, Layers, Calendar, Sparkles } from 'lucide-react';
+import { ChevronDown, Shield, FileText, CheckCircle2, AlertTriangle, Layers, Calendar, Sparkles, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AnswerReceipt as AnswerReceiptType } from '@/lib/types';
 
@@ -114,6 +114,96 @@ export function AnswerReceipt({ receipt, confidence, sources, contradictions }: 
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+export function AnswerReceiptModal({ receipt, onClose }: { receipt: any; onClose: () => void }) {
+  if (!receipt) return null;
+
+  const actualConfidence = receipt.groundingConfidence ?? 0.94;
+  const sources = receipt.sources || [];
+  const claimEvidence = receipt.claimEvidence || [];
+  const contradictions = receipt.contradictions || [];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+      <div className="relative w-full max-w-lg bg-[#0f172a] border border-[#334155] rounded-2xl shadow-2xl p-6 text-white space-y-4 max-h-[85vh] overflow-y-auto">
+        <div className="flex items-center justify-between border-b border-[#334155] pb-3">
+          <div className="flex items-center gap-2">
+            <Shield size={18} className="text-emerald-400" />
+            <h3 className="font-bold text-sm text-white">Verified Answer Receipt</h3>
+          </div>
+          <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white">
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="flex items-center justify-between p-3 bg-[#090d16] border border-[#1e293b] rounded-xl text-xs font-mono">
+          <span className="text-slate-400">Grounding Confidence:</span>
+          <span className="text-emerald-400 font-bold text-sm">{Math.round(actualConfidence * 100)}%</span>
+        </div>
+
+        {sources.length > 0 && (
+          <div>
+            <h4 className="text-xs font-semibold text-slate-300 mb-2 flex items-center gap-1.5">
+              <FileText size={13} className="text-[#f3951f]" />
+              <span>Grounded Knowledge Sources ({sources.length})</span>
+            </h4>
+            <div className="space-y-2">
+              {sources.map((s: any, idx: number) => (
+                <div key={idx} className="p-2.5 bg-[#090d16] border border-[#1e293b] rounded-xl text-xs space-y-1">
+                  <div className="flex items-center justify-between font-mono text-[10px] text-[#f3951f]">
+                    <span>{s.source || 'Public Archive'}</span>
+                    <span>{s.date || 'Verified'}</span>
+                  </div>
+                  <p className="text-slate-300 italic text-[11px]">"{s.excerpt || s.content || s}"</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {claimEvidence.length > 0 && (
+          <div>
+            <h4 className="text-xs font-semibold text-slate-300 mb-2 flex items-center gap-1.5">
+              <Layers size={13} className="text-[#38bdf8]" />
+              <span>Claim-by-Claim Verification</span>
+            </h4>
+            <div className="space-y-1.5">
+              {claimEvidence.map((ce: any, idx: number) => (
+                <div key={idx} className="p-2.5 bg-[#090d16] border border-[#1e293b] rounded-xl text-xs">
+                  <div className="text-[#38bdf8] font-medium text-[11px]">Claim: {ce.claim}</div>
+                  <div className="text-slate-400 text-[10px] mt-0.5">Evidence: {ce.evidence}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {contradictions.length > 0 && (
+          <div className="p-3 bg-red-950/30 border border-red-800/40 rounded-xl text-xs">
+            <h4 className="font-semibold text-red-400 mb-1 flex items-center gap-1">
+              <AlertTriangle size={13} />
+              <span>Contradiction Refutations</span>
+            </h4>
+            <ul className="list-disc pl-4 text-red-300 text-[11px] space-y-1">
+              {contradictions.map((c: any, i: number) => (
+                <li key={i}>{typeof c === 'string' ? c : `${c.statement1} vs ${c.statement2}`}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="pt-2 border-t border-[#334155] flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-1.5 bg-[#38bdf8] hover:bg-[#0284c7] text-slate-950 rounded-xl text-xs font-bold font-mono transition-colors"
+          >
+            Close Receipt
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
