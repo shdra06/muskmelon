@@ -1,0 +1,45 @@
+{
+  "version": "1.0",
+  "description": "MindCommit policies for approved knowledge ingestion and communication guardrails",
+  "rules": [
+    {
+      "id": "allow-drive-read",
+      "description": "Allow reading approved knowledge documents from Google Drive",
+      "condition": {
+        "tool": "googledrive.*",
+        "method": ["list_files", "get_file", "download_file"]
+      },
+      "action": "allow"
+    },
+    {
+      "id": "approve-telegram-send",
+      "description": "Require human authorization before outbound Telegram messages",
+      "condition": {
+        "tool": "telegram.send_message"
+      },
+      "action": "require_approval",
+      "message": "Outbound message via Telegram requires human review."
+    },
+    {
+      "id": "deny-destructive-mutations",
+      "description": "Deny all destructive deletion operations across providers",
+      "condition": {
+        "tool": "*.delete_*"
+      },
+      "action": "deny",
+      "message": "Destructive mutations are strictly prohibited by MindCommit policy."
+    },
+    {
+      "id": "rate-limit-messaging",
+      "description": "Rate limit outbound communication",
+      "condition": {
+        "tool": ["telegram.send_message", "slack.post_message"]
+      },
+      "action": "rate_limit",
+      "limit": {
+        "max": 10,
+        "window": "1h"
+      }
+    }
+  ]
+}

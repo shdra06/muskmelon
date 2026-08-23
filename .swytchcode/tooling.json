@@ -1,94 +1,28 @@
 {
-  "project": "mindcommit-knowledge-twin",
+  "project": "muskmelon-knowledge-twin",
   "version": "1.0.0",
-  "description": "MindCommit — Version-Controlled Knowledge Twin of Elon Musk, powered by Swytchcode",
+  "description": "MindCommit (MuskMelon) - Version-Controlled Knowledge Twin of Elon Musk",
   "integrations": [
     {
       "name": "googledrive",
-      "description": "Sync approved documents, PDFs, research papers for knowledge ingestion",
+      "description": "Sync approved documents and historical text for knowledge commits",
       "tools": [
         "googledrive.list_files",
-        "googledrive.get_file",
         "googledrive.download_file"
       ]
     },
     {
-      "name": "notion",
-      "description": "Pull structured notes, personal wikis, knowledge bases",
+      "name": "telegram",
+      "description": "Authorized twin access channel for verified subscribers",
       "tools": [
-        "notion.search_pages",
-        "notion.get_page",
-        "notion.get_block_children",
-        "notion.query_database"
-      ]
-    },
-    {
-      "name": "github",
-      "description": "Retrieve repositories, documentation, commits, code reasoning",
-      "tools": [
-        "github.search_repos",
-        "github.get_repo",
-        "github.list_commits",
-        "github.get_file_content",
-        "github.list_issues"
-      ]
-    },
-    {
-      "name": "youtube",
-      "description": "Pull interviews, lectures, talks — extract captions as knowledge",
-      "tools": [
-        "youtube.search_videos",
-        "youtube.get_video_details",
-        "youtube.get_captions"
-      ]
-    },
-    {
-      "name": "gmail",
-      "description": "Send Answer Receipts as emails, retrieve email-based knowledge",
-      "tools": [
-        "gmail.send_email",
-        "gmail.list_messages",
-        "gmail.get_message"
+        "telegram.send_message"
       ]
     },
     {
       "name": "slack",
-      "description": "Controlled team access to the twin, post answers in channels",
+      "description": "Team collaboration channel for question answering",
       "tools": [
-        "slack.post_message",
-        "slack.list_channels",
-        "slack.get_channel_history"
-      ]
-    },
-    {
-      "name": "telegram",
-      "description": "Bot interface for authorized users to query the twin",
-      "tools": [
-        "telegram.send_message",
-        "telegram.get_updates"
-      ]
-    },
-    {
-      "name": "resend",
-      "description": "Send formatted Answer Receipts as transactional emails",
-      "tools": [
-        "resend.send_email"
-      ]
-    },
-    {
-      "name": "firecrawl",
-      "description": "Scrape public content, articles, research papers for ingestion",
-      "tools": [
-        "firecrawl.scrape_url",
-        "firecrawl.crawl_url"
-      ]
-    },
-    {
-      "name": "google_calendar",
-      "description": "Timeline events for temporal context",
-      "tools": [
-        "google_calendar.list_events",
-        "google_calendar.create_event"
+        "slack.post_message"
       ]
     }
   ]

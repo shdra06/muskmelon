@@ -1,41 +1,37 @@
 import { createCommit } from '../commits/commit-engine';
 import { addCommit } from '../commits/commit-store';
-import { tools } from './tools';
+import { executeSwytchcodeTool } from './tools';
 
 /**
- * Swytchcode-powered source sync engine.
- * Mock implementations that would normally call the real tools and create commits.
+ * Swytchcode-powered source sync engine for approved Google Drive knowledge documents.
  */
 export class SyncEngine {
-  static async syncGoogleDrive(): Promise<void> {
-    const result = await tools.googleDrive.execute({ q: "type='document'" });
-    if (result.success) {
-      const commit = createCommit('Mock Google Drive content', 'google_drive', 'document', new Date().toISOString());
-      await addCommit(commit);
-    }
-  }
+  /**
+   * Sync approved knowledge documents from Google Drive
+   */
+  static async syncGoogleDrive(query: string = "name contains 'Elon'"): Promise<{ synced: number; commits: string[] }> {
+    const result = await executeSwytchcodeTool('googledrive.list_files', { query });
+    const commits: string[] = [];
 
-  static async syncNotion(): Promise<void> {
-    const result = await tools.notion.execute({ query: '' });
-    if (result.success) {
-      const commit = createCommit('Mock Notion content', 'notion', 'document', new Date().toISOString());
-      await addCommit(commit);
+    if (result.success && Array.isArray(result.data)) {
+      for (const file of result.data) {
+        const fileContent = await executeSwytchcodeTool('googledrive.download_file', { fileId: file.id });
+        if (fileContent.success && typeof fileContent.data === 'string') {
+          const commit = createCommit(
+            fileContent.data,
+            file.name || 'Google Drive Document',
+            'document',
+            file.modifiedTime || new Date().toISOString()
+          );
+          await addCommit(commit);
+          commits.push(commit.id);
+        }
+      }
     }
-  }
 
-  static async syncGitHub(): Promise<void> {
-    const result = await tools.github.execute({ q: 'user:elonmusk' });
-    if (result.success) {
-      const commit = createCommit('Mock GitHub content', 'github', 'document', new Date().toISOString());
-      await addCommit(commit);
-    }
-  }
-
-  static async syncYouTube(videoId: string): Promise<void> {
-    const result = await tools.youtube.execute({ videoId });
-    if (result.success) {
-      const commit = createCommit('Mock YouTube captions', 'youtube', 'interview', new Date().toISOString());
-      await addCommit(commit);
-    }
+    return {
+      synced: commits.length,
+      commits
+    };
   }
 }
