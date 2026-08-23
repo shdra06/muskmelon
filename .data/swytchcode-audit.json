@@ -484,5 +484,62 @@
       "durationMs": 7300,
       "retryCount": 0
     }
+  },
+  {
+    "id": "08fe8aa8-0f22-4cbe-a77f-4822e46bf800",
+    "timestamp": "2026-08-23T09:52:31.064Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 8,
+      "hasHistory": true
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 5971,
+      "retryCount": 0
+    }
+  },
+  {
+    "id": "8b59a112-cda0-4300-80fd-a83fd1585f3f",
+    "timestamp": "2026-08-23T09:55:20.841Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 8,
+      "hasHistory": false
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 4864,
+      "retryCount": 0
+    }
+  },
+  {
+    "id": "62f313d1-e8c7-47c7-b014-06b2db41c6d1",
+    "timestamp": "2026-08-23T09:55:35.927Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 2,
+      "hasHistory": false
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 4737,
+      "retryCount": 0
+    }
   }
 ]

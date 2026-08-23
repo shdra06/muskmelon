@@ -144,12 +144,13 @@ export default function Home() {
           })
         });
         const data = await res.json();
-        setActiveReceipt(data.receipt);
-        streamAssistantResponse(newMsgList, data.message, data.receipt);
+        const responseText = data.message || data.error || "Doing well. Extremely busy splitting time between Starbase, Giga Texas, and xAI. What engineering or physics problem are we tackling today?";
+        if (data.receipt) setActiveReceipt(data.receipt);
+        streamAssistantResponse(newMsgList, responseText, data.receipt);
       }
     } catch (error) {
       console.error(error);
-      const fallback = "From first principles, when scaling complex hardware or software systems, you have to eliminate unnecessary constraints. What specific engineering question can I help you break down?";
+      const fallback = "Yeah, from first principles, when scaling complex hardware or software systems, you have to eliminate unnecessary constraints. What specific engineering question can I help you break down?";
       streamAssistantResponse(newMsgList, fallback);
     } finally {
       setIsLoading(false);

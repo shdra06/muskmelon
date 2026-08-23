@@ -34,7 +34,7 @@ async function callOpenRouterAPI(systemPrompt: string, userQuery: string, histor
       },
       body: JSON.stringify({
         model: 'openai/gpt-4o',
-        temperature: 0.6, // Slight temperature for authentic conversational phrasing
+        temperature: 0.6,
         messages: [
           { role: 'system', content: systemPrompt },
           ...formattedHistory,
@@ -93,7 +93,7 @@ function generateLocalElonResponse(query: string, contextChunks: TemporalChunk[]
   const q = query.toLowerCase().trim();
   
   // 1. Conversational Greetings & Casual Inquiries
-  if (/^(hi|hello|hey|greetings|yo|sup|howdy)(\s+.*)?$/i.test(q) || q.includes('how are you') || q.includes('how r u') || q.includes('whats up')) {
+  if (/^(hi|hello|hey|greetings|yo|sup|howdy)(\s+.*)?$/i.test(q) || q.includes('how are you') || q.includes('how r u') || q.includes('whats up') || q.includes('hi there')) {
     return `Yeah, doing well. Extremely busy splitting time between Starbase, Giga Texas, and xAI in Memphis. When you're trying to make life multiplanetary, accelerate sustainable transport, and build truth-seeking AI, there are basically no days off.\n\nWhat engineering or physics problem are we tackling today?`;
   }
 
@@ -202,7 +202,7 @@ Current Mode: ${mode} ${asOfDate ? `(As of ${asOfDate})` : ''}
     };
   }
 
-  // 2. Try OpenAI API with history
+  // 2. Try OpenAI API with history (with quick timeout / quota catch)
   const openaiClient = getOpenAIClient();
   if (openaiClient) {
     try {
@@ -212,7 +212,7 @@ Current Mode: ${mode} ${asOfDate ? `(As of ${asOfDate})` : ''}
       }));
 
       const response = await openaiClient.chat.completions.create({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         temperature: 0.6,
         messages: [
           { role: 'system', content: systemPrompt },
@@ -230,8 +230,8 @@ Current Mode: ${mode} ${asOfDate ? `(As of ${asOfDate})` : ''}
           confidence: receipt.groundingConfidence || 0.95
         };
       }
-    } catch (error) {
-      console.warn('OpenAI Chat Completion fallback:', error);
+    } catch (error: any) {
+      console.warn('OpenAI Chat Completion notice (switching to deterministic first-principles engine):', error?.message || error);
     }
   }
 
