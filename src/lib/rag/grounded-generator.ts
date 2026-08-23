@@ -113,10 +113,10 @@ async function callGeminiAPI(systemPrompt: string, userQuery: string, history: M
 }
 
 /**
- * High-Precision Grounded First-Principles Synthesizer:
+ * Grounded RAG Response Synthesizer:
  * Generates Elon's grounded response using Weaviate RAG chunks if APIs are unreachable.
  */
-function synthesizeFirstPrinciplesRAGResponse(
+function synthesizeRAGResponse(
   query: string,
   contextChunks: TemporalChunk[],
   mode: string,
@@ -142,7 +142,7 @@ function synthesizeFirstPrinciplesRAGResponse(
   if (contextChunks.length > 0) {
     const primary = contextChunks[0];
     const cleanContent = primary.content.replace(/^\[.*?\]\s*/, '').replace(/\(Source:.*?\)/, '').trim();
-    return `Yeah, looking at this from first principles: ${cleanContent}\n\nThe critical path is eliminating constraints, iterating at maximum velocity, and focusing on the physical limits of mass and energy.`;
+    return `Yeah, looking at this: ${cleanContent}\n\nThe critical path is eliminating constraints, iterating at maximum velocity, and focusing on the physical limits of mass and energy.`;
   }
 
   // Domain Defaults
@@ -158,7 +158,7 @@ function synthesizeFirstPrinciplesRAGResponse(
     return `I believe in solving real physical engineering problems that move humanity forward. Don't chase paper games or financial engineering. The highest return on investment comes from advancing sustainable energy generation and storage, autonomous robotic transport, orbital heavy lift, and high-bandwidth neural interfaces.`;
   }
 
-  return `Yeah, I mean, if you break that down from first principles: what are the underlying physics constraints? In any engineering problem, you want to eliminate friction, delete unnecessary parts, and accelerate cycle time. Prototypes are trivial; scaling production to high volume at an order of magnitude lower cost is what's truly difficult.\n\nWhat specific constraint do you want to optimize first?`;
+  return `Yeah, I mean, if you break that down: what are the underlying physics constraints? In any engineering problem, you want to eliminate friction, delete unnecessary parts, and accelerate cycle time. Prototypes are trivial; scaling production to high volume at an order of magnitude lower cost is what's truly difficult.\n\nWhat specific constraint do you want to optimize first?`;
 }
 
 /**
@@ -166,7 +166,7 @@ function synthesizeFirstPrinciplesRAGResponse(
  * 1. Executes OpenRouter API (GPT-4o / Claude) with the user's active key.
  * 2. Executes OpenAI API if available.
  * 3. Executes Google Gemini if available.
- * 4. Falls back seamlessly to First-Principles RAG Synthesizer.
+ * 4. Falls back seamlessly to Grounded RAG Synthesizer.
  */
 export async function generateGroundedResponse(
   query: string,
@@ -177,7 +177,7 @@ export async function generateGroundedResponse(
 ): Promise<AgentResponse> {
   const contextText = contextChunks.length > 0 
     ? contextChunks.map((c, i) => `[Source ${i + 1}, Date: ${c.validFrom}, Topic: ${c.metadata?.topic || 'general'}] ${c.content}`).join('\n\n')
-    : 'No direct historical quote found in dataset. Use First Principles Reasoning and Musk Cognitive Signature to generalize.';
+    : 'No direct historical quote found in the dataset for this query.';
 
   const systemPrompt = `${ELON_PROMPT_SYSTEM_INSTRUCTION}
 
@@ -239,7 +239,7 @@ Current Mode: ${mode} ${asOfDate ? `(As of ${asOfDate})` : ''}
   }
 
   // 4. Seamless First-Principles RAG Synthesizer
-  const answer = synthesizeFirstPrinciplesRAGResponse(query, contextChunks, mode, asOfDate);
+  const answer = synthesizeRAGResponse(query, contextChunks, mode, asOfDate);
   const receipt = await generateAnswerReceipt(query, answer, contextChunks, mode as any, asOfDate);
 
   return {

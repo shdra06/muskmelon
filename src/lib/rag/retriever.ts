@@ -1,6 +1,7 @@
 import { OpenAI } from 'openai';
 import { VectorStore } from '../vectorstore';
 import { ChatMode, TemporalChunk } from '../types';
+import { scrapeFreshWebContext } from './web-scraper-fallback';
 
 let openai: OpenAI | null = null;
 if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-') && !process.env.OPENAI_API_KEY.includes('...')) {
@@ -8,7 +9,8 @@ if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-') &
 }
 
 /**
- * Time-aware retriever with OpenAI embedding and robust semantic text fallback.
+ * Time-aware retriever with VectorStore search and automatic Web Scraper fallback.
+ * If the local index or Weaviate has no matching info, it triggers live web discovery.
  */
 export async function retrieveContext(
   query: string,
@@ -28,11 +30,11 @@ export async function retrieveContext(
         });
         queryEmbedding = res.data[0].embedding;
       } catch (err) {
-        console.warn('OpenAI embedding call failed, falling back to text match:', err);
+        // Fallback to text match
       }
     }
 
-    // 2. Route based on mode
+    // 1. Search Vector Store / Weaviate
     let results: { chunk: TemporalChunk; similarity: number }[] = [];
 
     if (mode === 'now') {
@@ -47,14 +49,27 @@ export async function retrieveContext(
       results = await VectorStore.search(queryEmbedding, topK, undefined, query);
     }
 
-    // If text match returned low scores, still return top contextual chunks
+    // 2. If vector search found no relevant chunks -> TRIGGER LIVE WEB SCRAPING
+    if (results.length === 0 || results.every(r => r.similarity < 0.15)) {
+      console.log(`🔍 [RAG NOTICE] No high-confidence vector matches for "${query}". Invoking live Web Scraper discovery...`);
+      const webChunks = await scrapeFreshWebContext(query);
+      if (webChunks.length > 0) {
+        return webChunks;
+      }
+    }
+
+    // 3. If web scraper is empty, return top fallback vector chunks
     if (results.length === 0) {
       results = await VectorStore.search([], topK, asOfDate, query);
     }
 
     return results.map(r => r.chunk);
   } catch (error) {
-    console.error('Error retrieving context:', error);
-    return [];
+    console.error('Error retrieving context, attempting web scraper:', error);
+    try {
+      return await scrapeFreshWebContext(query);
+    } catch {
+      return [];
+    }
   }
 }
