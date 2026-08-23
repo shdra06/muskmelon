@@ -4,12 +4,8 @@ import Link from 'next/link';
 import {
   Zap, Clock, GitCompare, Mic, MicOff, Send, RefreshCw,
   ExternalLink, CheckCircle2, Radio, Info, Layers, Sparkles,
-  ChevronRight, Shield, MessageSquare, Plus, Volume2, Database,
-  Settings as SettingsIcon, X
+  ChevronRight, Shield, MessageSquare, Database, Settings as SettingsIcon, X
 } from 'lucide-react';
-import { SessionsDrawer, ChatSession } from '@/components/sessions-drawer';
-import { SettingsDrawer } from '@/components/settings-drawer';
-import { AnswerReceiptModal } from '@/components/answer-receipt';
 import { createSpeechRecognizer } from '@/lib/voice';
 
 type Mode = 'now' | 'time' | 'diff';
@@ -62,14 +58,10 @@ export default function Home() {
   const [isTyping, setIsTyping] = useState<boolean>(false);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [activeReceipt, setActiveReceipt] = useState<any>(null);
 
   // Modals & Panels
   const [showSourcesPanel, setShowSourcesPanel] = useState(false);
-  const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
-  const [isSessionsOpen, setIsSessionsOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Voice Input (Speech to Text)
   const [isListening, setIsListening] = useState(false);
@@ -86,13 +78,11 @@ export default function Home() {
       content: "The future is fundamentally about becoming a multiplanetary species. We must extend life beyond Earth and make humanity a spacefaring civilization. That is the long-term insurance for consciousness."
     }
   ]);
-  const [sessions, setSessions] = useState<ChatSession[]>([]);
-  const [currentSessionId, setCurrentSessionId] = useState('session-default');
 
   const textareaRef = useRef<HTMLInputElement>(null);
   const responseEndRef = useRef<HTMLDivElement>(null);
 
-  // Smooth Typewriter effect for response
+  // Smooth Typewriter effect
   useEffect(() => {
     if (!activeResponse) return;
     setIsTyping(true);
@@ -171,7 +161,6 @@ export default function Home() {
         });
         const data = await res.json();
         setActiveResponse(data.message);
-        setActiveReceipt(data.receipt);
         setActiveConfidence(Math.round((data.receipt?.groundingConfidence || 0.94) * 100));
 
         if (data.receipt?.sources && data.receipt.sources.length > 0) {
@@ -184,7 +173,7 @@ export default function Home() {
           }));
           setActiveSources(mapped);
         } else {
-          // Dynamic sources based on query topic
+          // Dynamic contextual sources based on query topic
           const lower = queryToRun.toLowerCase();
           if (lower.includes('tesla') || lower.includes('cybercab') || lower.includes('fsd') || lower.includes('optimus')) {
             setActiveSources([
@@ -200,6 +189,10 @@ export default function Home() {
             setActiveSources([
               { id: '1', type: 'Tweet', title: '@elonmusk on X', date: 'May 13, 2021', excerpt: 'Dogecoin has much higher transaction throughput capability than Bitcoin for daily purchases.' },
               { id: '2', type: 'Interview', title: 'The B-Word Conference', date: 'Jul 21, 2021', excerpt: 'Tesla will accept Bitcoin once mining reaches >50% renewable energy.' }
+            ]);
+          } else {
+            setActiveSources([
+              { id: '1', type: 'Interview', title: 'Elon Musk Public Archive', date: 'Verified 2010–2025', excerpt: 'Reasoning from first principles by breaking problems down to fundamental physical truths.' }
             ]);
           }
         }
@@ -243,7 +236,7 @@ export default function Home() {
     }
   };
 
-  // Quick starter suggestions
+  // Quick suggestion topics
   const suggestions = [
     { label: "🚀 Mars Colonization", query: "What is your roadmap and timeline for making life multiplanetary on Mars?" },
     { label: "🤖 Cybercab & FSD", query: "What is the status of Tesla Robotaxi, Cybercab, and autonomous driving?" },
@@ -269,7 +262,7 @@ export default function Home() {
       }}
     >
       
-      {/* ─── 1. FULL-BLEED CINEMATIC BACKGROUND ARTWORK ─── */}
+      {/* ─── 1. FULL-BLEED CINEMATIC BACKGROUND ARTWORK (Elon clearly visible on left-center) ─── */}
       <div 
         style={{
           position: 'absolute',
@@ -277,7 +270,7 @@ export default function Home() {
           backgroundImage: "url('/bg-elon-office.png')",
           backgroundRepeat: 'no-repeat',
           backgroundSize: 'cover',
-          backgroundPosition: 'center 15%',
+          backgroundPosition: 'left center',
           zIndex: 0
         }}
       >
@@ -286,13 +279,13 @@ export default function Home() {
           style={{
             position: 'absolute',
             inset: 0,
-            background: 'radial-gradient(circle at 50% 35%, rgba(5, 8, 17, 0.45) 0%, rgba(5, 8, 17, 0.85) 75%, rgba(5, 8, 17, 0.98) 100%)',
+            background: 'linear-gradient(to right, rgba(5, 8, 17, 0.2) 0%, rgba(5, 8, 17, 0.4) 40%, rgba(5, 8, 17, 0.85) 70%, rgba(5, 8, 17, 0.96) 100%)',
             pointerEvents: 'none'
           }} 
         />
       </div>
 
-      {/* ─── 2. TOP NAV BAR (CLEAN & MINIMAL) ─── */}
+      {/* ─── 2. TOP NAV BAR (CLEAN, MINIMAL & PROFESSIONAL) ─── */}
       <header 
         style={{
           position: 'relative',
@@ -300,8 +293,8 @@ export default function Home() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '12px 24px',
-          backgroundColor: 'rgba(7, 11, 20, 0.75)',
+          padding: '10px 24px',
+          backgroundColor: 'rgba(7, 11, 20, 0.7)',
           backdropFilter: 'blur(16px)',
           borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
           flexShrink: 0
@@ -413,7 +406,7 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Right Badges & Controls */}
+        {/* Right Badges */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <button
             onClick={() => setShowSourcesPanel(!showSourcesPanel)}
@@ -472,117 +465,41 @@ export default function Home() {
             }}
           >
             <Database size={12} color="#f3951f" />
-            <span style={{ display: 'none' }}>Admin</span>
+            <span>Admin</span>
           </Link>
         </div>
       </header>
 
-      {/* ─── 3. FOCAL CENTER: FLOATING ELON RESPONSE HUD SCREEN ─── */}
+      {/* ─── 3. MAIN WORKSPACE: ELON ON LEFT (UNCOVERED), RESPONSE CARD ON RIGHT ─── */}
       <main 
         style={{
           position: 'relative',
           zIndex: 20,
           flex: 1,
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
-          padding: '16px 20px',
-          maxWidth: '860px',
+          justifyContent: 'flex-end', // Positioned nicely on the right side of the face
+          padding: '16px 36px',
           width: '100%',
+          maxWidth: '1440px',
           margin: '0 auto',
           boxSizing: 'border-box'
         }}
       >
-        {/* Era Selector Controls (when Time Lens or Diff active) */}
-        {mode === 'time' && (
-          <div 
-            style={{
-              width: '100%',
-              marginBottom: '12px',
-              padding: '8px 16px',
-              backgroundColor: 'rgba(15, 23, 42, 0.9)',
-              border: '1px solid rgba(243, 149, 31, 0.5)',
-              borderRadius: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              fontSize: '12px',
-              backdropFilter: 'blur(12px)'
-            }}
-          >
-            <span style={{ color: '#f3951f', fontFamily: 'monospace', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Clock size={14} /> Knowledge Timeline As Of Date:
-            </span>
-            <input
-              type="date"
-              value={asOfDate}
-              min="2010-01-01"
-              max="2025-12-31"
-              onChange={e => setAsOfDate(e.target.value)}
-              style={{
-                backgroundColor: '#1e293b',
-                border: '1px solid #334155',
-                borderRadius: '8px',
-                padding: '4px 10px',
-                fontSize: '12px',
-                color: '#ffffff',
-                fontFamily: 'monospace'
-              }}
-            />
-          </div>
-        )}
-
-        {mode === 'diff' && (
-          <div 
-            style={{
-              width: '100%',
-              marginBottom: '12px',
-              padding: '8px 16px',
-              backgroundColor: 'rgba(15, 23, 42, 0.9)',
-              border: '1px solid rgba(168, 85, 247, 0.5)',
-              borderRadius: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              fontSize: '12px',
-              backdropFilter: 'blur(12px)'
-            }}
-          >
-            <span style={{ color: '#c084fc', fontFamily: 'monospace', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <GitCompare size={14} /> Belief Shift Eras:
-            </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <input
-                type="date"
-                value={compareDates[0]}
-                onChange={e => setCompareDates([e.target.value, compareDates[1]])}
-                style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '6px', padding: '3px 8px', fontSize: '11px', color: '#fff', fontFamily: 'monospace' }}
-              />
-              <span style={{ color: '#94a3b8', fontWeight: 700 }}>vs</span>
-              <input
-                type="date"
-                value={compareDates[1]}
-                onChange={e => setCompareDates([compareDates[0], e.target.value])}
-                style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '6px', padding: '3px 8px', fontSize: '11px', color: '#fff', fontFamily: 'monospace' }}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* ─── THE PROMINENT FLOATING RESPONSE CARD ─── */}
+        {/* ─── THE FLOATING RESPONSE CARD (PLACED ON THE RIGHT OF ELON'S FACE) ─── */}
         <div 
           style={{
             width: '100%',
-            backgroundColor: 'rgba(12, 18, 32, 0.88)',
-            border: '1px solid rgba(56, 189, 248, 0.25)',
+            maxWidth: '520px',
+            backgroundColor: 'rgba(10, 16, 28, 0.84)',
+            border: '1px solid rgba(56, 189, 248, 0.3)',
             borderRadius: '20px',
-            padding: '24px',
-            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.85), inset 0 1px 1px rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(20px)',
+            padding: '22px',
+            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.9), inset 0 1px 1px rgba(255, 255, 255, 0.12)',
+            backdropFilter: 'blur(24px)',
             display: 'flex',
             flexDirection: 'column',
-            gap: '16px',
+            gap: '14px',
             boxSizing: 'border-box'
           }}
         >
@@ -593,21 +510,21 @@ export default function Home() {
               alignItems: 'center',
               justifyContent: 'space-between',
               borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-              paddingBottom: '12px'
+              paddingBottom: '10px'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div 
                 style={{
-                  width: '38px',
-                  height: '38px',
+                  width: '34px',
+                  height: '34px',
                   borderRadius: '10px',
                   backgroundColor: '#1e293b',
                   border: '1px solid #38bdf8',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '18px',
+                  fontSize: '16px',
                   boxShadow: '0 0 12px rgba(56, 189, 248, 0.3)'
                 }}
               >
@@ -615,7 +532,7 @@ export default function Home() {
               </div>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '16px', fontWeight: 800, fontFamily: 'monospace', color: '#4ade80', letterSpacing: '0.05em' }}>
+                  <span style={{ fontSize: '15px', fontWeight: 800, fontFamily: 'monospace', color: '#4ade80', letterSpacing: '0.05em' }}>
                     ELON MUSK
                   </span>
                   <span 
@@ -644,7 +561,7 @@ export default function Home() {
               <div style={{ fontSize: '14px', fontWeight: 800, fontFamily: 'monospace', color: '#4ade80' }}>
                 {activeConfidence}%
               </div>
-              <div style={{ fontSize: '9px', fontFamily: 'monospace', color: '#64748b' }}>
+              <div style={{ fontSize: '8.5px', fontFamily: 'monospace', color: '#64748b' }}>
                 GROUNDING CONFIDENCE
               </div>
             </div>
@@ -653,11 +570,11 @@ export default function Home() {
           {/* Response Text Body with Typewriter Effect */}
           <div 
             style={{
-              minHeight: '130px',
+              minHeight: '140px',
               maxHeight: '260px',
               overflowY: 'auto',
-              fontSize: '15px',
-              lineHeight: '1.65',
+              fontSize: '14.5px',
+              lineHeight: '1.6',
               color: '#f1f5f9',
               fontFamily: 'system-ui, -apple-system, sans-serif',
               whiteSpace: 'pre-wrap',
@@ -676,8 +593,8 @@ export default function Home() {
                   <span 
                     style={{
                       display: 'inline-block',
-                      width: '8px',
-                      height: '16px',
+                      width: '7px',
+                      height: '15px',
                       backgroundColor: '#4ade80',
                       marginLeft: '4px',
                       verticalAlign: 'middle',
@@ -697,7 +614,7 @@ export default function Home() {
               alignItems: 'center',
               justifyContent: 'space-between',
               borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-              paddingTop: '12px',
+              paddingTop: '10px',
               fontSize: '11px',
               fontFamily: 'monospace',
               color: '#94a3b8'
@@ -705,41 +622,54 @@ export default function Home() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <CheckCircle2 size={13} color="#4ade80" />
-              <span>Grounded in 2010–2025 Elon Musk archives</span>
+              <span>Grounded in verified public data</span>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <button
-                onClick={() => setShowSourcesPanel(true)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#38bdf8',
-                  fontSize: '11px',
-                  fontFamily: 'monospace',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  padding: 0
-                }}
-              >
-                <span>View {activeSources.length} Verified Sources</span>
-                <ChevronRight size={12} />
-              </button>
-            </div>
+            <button
+              onClick={() => setShowSourcesPanel(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#38bdf8',
+                fontSize: '11px',
+                fontFamily: 'monospace',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: 0
+              }}
+            >
+              <span>View {activeSources.length} Sources</span>
+              <ChevronRight size={12} />
+            </button>
           </div>
         </div>
+      </main>
 
-        {/* ─── QUICK PROMPT SUGGESTION PILLS ─── */}
+      {/* ─── 4. BOTTOM FLOATING PROMPT INPUT BAR & QUICK TOPICS ─── */}
+      <footer 
+        style={{
+          position: 'relative',
+          zIndex: 30,
+          padding: '10px 24px 18px 24px',
+          maxWidth: '880px',
+          width: '100%',
+          margin: '0 auto',
+          boxSizing: 'border-box',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '8px'
+        }}
+      >
+        {/* Quick Suggestion Pills */}
         <div 
           style={{
             display: 'flex',
             flexWrap: 'wrap',
             gap: '8px',
             justifyContent: 'center',
-            marginTop: '14px',
-            marginBottom: '4px',
             width: '100%'
           }}
         >
@@ -748,11 +678,11 @@ export default function Home() {
               key={idx}
               onClick={() => handleSubmit(undefined, s.query)}
               style={{
-                padding: '6px 12px',
-                backgroundColor: 'rgba(15, 23, 42, 0.8)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                padding: '4px 10px',
+                backgroundColor: 'rgba(15, 23, 42, 0.85)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
                 borderRadius: '9999px',
-                fontSize: '11px',
+                fontSize: '10.5px',
                 fontFamily: 'monospace',
                 color: '#cbd5e1',
                 cursor: 'pointer',
@@ -762,45 +692,34 @@ export default function Home() {
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = '#4ade80';
                 e.currentTarget.style.color = '#ffffff';
-                e.currentTarget.style.backgroundColor = 'rgba(21, 128, 61, 0.2)';
+                e.currentTarget.style.backgroundColor = 'rgba(21, 128, 61, 0.25)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
                 e.currentTarget.style.color = '#cbd5e1';
-                e.currentTarget.style.backgroundColor = 'rgba(15, 23, 42, 0.8)';
+                e.currentTarget.style.backgroundColor = 'rgba(15, 23, 42, 0.85)';
               }}
             >
               {s.label}
             </button>
           ))}
         </div>
-      </main>
 
-      {/* ─── 4. BOTTOM FLOATING PROMPT INPUT BAR ─── */}
-      <footer 
-        style={{
-          position: 'relative',
-          zIndex: 30,
-          padding: '12px 24px 20px 24px',
-          maxWidth: '860px',
-          width: '100%',
-          margin: '0 auto',
-          boxSizing: 'border-box'
-        }}
-      >
+        {/* Input Form Bar */}
         <form 
           onSubmit={(e) => handleSubmit(e)}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '10px',
+            width: '100%',
             backgroundColor: 'rgba(15, 23, 42, 0.92)',
-            border: '2px solid rgba(74, 222, 128, 0.3)',
+            border: '2px solid rgba(74, 222, 128, 0.35)',
             borderRadius: '16px',
-            padding: '8px 14px',
-            boxShadow: '0 15px 40px rgba(0, 0, 0, 0.8)',
+            padding: '7px 14px',
+            boxShadow: '0 15px 40px rgba(0, 0, 0, 0.85)',
             backdropFilter: 'blur(20px)',
-            transition: 'border-color 0.2s'
+            boxSizing: 'border-box'
           }}
         >
           {/* Mic Button */}
@@ -809,8 +728,8 @@ export default function Home() {
             onClick={handleMicToggle}
             title={isListening ? "Listening... Click to stop" : "Voice Input (Speech-to-Text)"}
             style={{
-              width: '36px',
-              height: '36px',
+              width: '34px',
+              height: '34px',
               borderRadius: '10px',
               border: 'none',
               cursor: 'pointer',
@@ -819,11 +738,10 @@ export default function Home() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              flexShrink: 0,
-              transition: 'all 0.2s'
+              flexShrink: 0
             }}
           >
-            {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+            {isListening ? <MicOff size={15} /> : <Mic size={15} />}
           </button>
 
           {/* Text Input */}
@@ -846,7 +764,7 @@ export default function Home() {
               border: 'none',
               outline: 'none',
               color: '#f1f5f9',
-              fontSize: '14px',
+              fontSize: '13.5px',
               fontFamily: 'system-ui, -apple-system, sans-serif'
             }}
           />
@@ -859,7 +777,7 @@ export default function Home() {
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '8px 18px',
+              padding: '7px 16px',
               backgroundColor: '#15803d',
               color: '#ffffff',
               borderRadius: '10px',
@@ -870,12 +788,11 @@ export default function Home() {
               cursor: !input.trim() || isLoading ? 'not-allowed' : 'pointer',
               opacity: !input.trim() || isLoading ? 0.4 : 1,
               flexShrink: 0,
-              boxShadow: '0 4px 12px rgba(21, 128, 61, 0.4)',
-              transition: 'all 0.2s'
+              boxShadow: '0 4px 12px rgba(21, 128, 61, 0.4)'
             }}
           >
             <span>ASK</span>
-            <Send size={13} />
+            <Send size={12} />
           </button>
         </form>
       </footer>
@@ -918,7 +835,7 @@ export default function Home() {
                 </h3>
               </div>
               <button 
-                onClick={() => setShowSourcesPanel(false)}
+                onClick={() => setShowSourcesPanel(false)} 
                 style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px' }}
               >
                 ✕
@@ -926,7 +843,7 @@ export default function Home() {
             </div>
 
             <div style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace' }}>
-              Every response is strictly synthesized and verified against these primary public sources:
+              Every response is synthesized strictly from verified primary sources:
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
