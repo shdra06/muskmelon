@@ -15,7 +15,6 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   receipt?: any;
-  timestamp?: string;
 }
 
 interface ChatSession {
@@ -31,7 +30,7 @@ export default function Home() {
   const [compareDates, setCompareDates] = useState<[string, string]>(['2021-02-01', '2021-06-01']);
   const [input, setInput] = useState('');
   
-  // Messages stream
+  // Real conversation stream
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'user',
@@ -39,7 +38,7 @@ export default function Home() {
     },
     {
       role: 'assistant',
-      content: 'The future is fundamentally about becoming a multiplanetary species. We must extend life beyond Earth.'
+      content: 'The future is fundamentally about becoming a multiplanetary species. We must extend life beyond Earth and make humanity a spacefaring civilization.'
     },
     {
       role: 'user',
@@ -59,7 +58,7 @@ export default function Home() {
     }
   ]);
 
-  // Streaming text for the latest message
+  // Streaming text for typewriter animation
   const [streamingText, setStreamingText] = useState<string>('');
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
 
@@ -72,12 +71,8 @@ export default function Home() {
   const [isListening, setIsListening] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
 
-  // Timestamp
+  // Live Date
   const [currentDateFormatted, setCurrentDateFormatted] = useState('Tuesday, May 13, 2025');
-
-  // Sessions
-  const [sessions, setSessions] = useState<ChatSession[]>([]);
-  const [currentSessionId, setCurrentSessionId] = useState('session-default');
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
@@ -94,7 +89,7 @@ export default function Home() {
     } catch {}
   }, []);
 
-  // Auto-scroll chat window when messages update
+  // Auto-scroll chat window when new messages arrive
   useEffect(() => {
     if (chatScrollRef.current) {
       chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
@@ -161,12 +156,12 @@ export default function Home() {
     }
   };
 
-  // Streaming typewriter animation for the chatbot response in the right sidebar
+  // Streaming typewriter animation for the chatbot response
   const streamAssistantResponse = (baseMsgs: Message[], fullText: string, receipt?: any) => {
     setIsStreaming(true);
     setStreamingText('');
     let idx = 0;
-    const step = Math.max(2, Math.floor(fullText.length / 40));
+    const step = Math.max(2, Math.floor(fullText.length / 35));
 
     const interval = setInterval(() => {
       idx += step;
@@ -178,7 +173,7 @@ export default function Home() {
       } else {
         setStreamingText(fullText.slice(0, idx));
       }
-    }, 20);
+    }, 18);
   };
 
   const handleMicToggle = () => {
@@ -228,29 +223,20 @@ export default function Home() {
       }}
     >
       
-      {/* ─── 1. FULL BACKGROUND SCENE (Matching Reference Image) ─── */}
+      {/* ─── 1. BACKGROUND SCENE ARTWORK ─── */}
       <div 
         style={{
           position: 'absolute',
           inset: 0,
-          backgroundImage: "url('/scenes/elon-desk-full.png')",
+          backgroundImage: "url('/bg-elon-clean.png')",
           backgroundRepeat: 'no-repeat',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           zIndex: 0
         }}
-      >
-        <div 
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 40%, rgba(0,0,0,0.3) 100%)',
-            pointerEvents: 'none'
-          }} 
-        />
-      </div>
+      />
 
-      {/* ─── 2. TOP APP BAR ─── */}
+      {/* ─── 2. TOP NAV BAR ─── */}
       <header 
         style={{
           position: 'relative',
@@ -259,8 +245,8 @@ export default function Home() {
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '8px 24px',
-          backgroundColor: 'rgba(9, 14, 26, 0.65)',
-          backdropFilter: 'blur(12px)',
+          backgroundColor: 'rgba(9, 14, 26, 0.75)',
+          backdropFilter: 'blur(16px)',
           borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
           flexShrink: 0
         }}
@@ -278,7 +264,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Center Mode Switcher */}
+        {/* Center Mode Switcher Tabs */}
         <div 
           style={{
             display: 'flex',
@@ -309,7 +295,7 @@ export default function Home() {
             }}
           >
             <Zap size={12} />
-            <span>Now Mode (2025+)</span>
+            <span>Now Mode</span>
           </button>
 
           <button
@@ -357,7 +343,7 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Right Nav */}
+        {/* Right Badges */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div 
             style={{
@@ -400,7 +386,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ─── 3. MAIN INTERACTIVE VIEWPORT (MATCHING REFERENCE EXACTLY) ─── */}
+      {/* ─── 3. MAIN WORKSPACE ─── */}
       <main 
         style={{
           position: 'relative',
@@ -409,7 +395,7 @@ export default function Home() {
           display: 'flex',
           alignItems: 'flex-end',
           justifyContent: 'space-between',
-          padding: '16px 28px 20px 28px',
+          padding: '16px 32px 24px 32px',
           boxSizing: 'border-box',
           overflow: 'hidden'
         }}
@@ -425,7 +411,7 @@ export default function Home() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'flex-end',
-            maxWidth: '680px',
+            maxWidth: '620px',
             margin: '0 auto',
             position: 'relative',
             zIndex: 25
@@ -438,7 +424,7 @@ export default function Home() {
                 width: '100%',
                 marginBottom: '10px',
                 padding: '6px 14px',
-                backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                backgroundColor: 'rgba(15, 23, 42, 0.95)',
                 border: '1px solid rgba(243, 149, 31, 0.6)',
                 borderRadius: '12px',
                 display: 'flex',
@@ -476,7 +462,7 @@ export default function Home() {
                 width: '100%',
                 marginBottom: '10px',
                 padding: '6px 14px',
-                backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                backgroundColor: 'rgba(15, 23, 42, 0.95)',
                 border: '1px solid rgba(168, 85, 247, 0.6)',
                 borderRadius: '12px',
                 display: 'flex',
@@ -507,7 +493,7 @@ export default function Home() {
             </div>
           )}
 
-          {/* PHYSICAL PRESS NOTEBOOK CLIPBOARD */}
+          {/* PHYSICAL PRESS NOTEBOOK CLIPBOARD (100% OPAQUE, ZERO GHOSTING) */}
           <div style={{ position: 'relative', width: '100%' }}>
             {/* Clipboard clamp on top */}
             <div 
@@ -546,7 +532,7 @@ export default function Home() {
                 position: 'relative'
               }}
             >
-              {/* Lined paper texture background */}
+              {/* Lined paper texture */}
               <div 
                 style={{
                   position: 'absolute',
@@ -558,7 +544,7 @@ export default function Home() {
                 }}
               />
 
-              {/* Notebook Header Line */}
+              {/* Notebook Header */}
               <div 
                 style={{
                   position: 'relative',
@@ -686,18 +672,17 @@ export default function Home() {
 
         {/* ═══════════════════════════════════════════════════════
             RIGHT SIDE: "SETTINGS & MEMORY" CHAT INTERFACE WINDOW
-            (Matching the exact floating card in reference image)
+            (100% SOLID BACKGROUND, ZERO GHOSTING)
             ═══════════════════════════════════════════════════════ */}
         <aside 
           style={{
-            width: '390px',
+            width: '380px',
             height: 'calc(100vh - 100px)',
-            maxHeight: '640px',
-            backgroundColor: 'rgba(13, 20, 36, 0.94)',
-            backdropFilter: 'blur(20px)',
+            maxHeight: '620px',
+            backgroundColor: '#0c1322',
             border: '1px solid rgba(255, 255, 255, 0.12)',
             borderRadius: '20px',
-            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.85)',
+            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.95)',
             display: 'flex',
             flexDirection: 'column',
             zIndex: 30,
@@ -714,7 +699,7 @@ export default function Home() {
               justifyContent: 'space-between',
               padding: '12px 18px',
               borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-              backgroundColor: 'rgba(7, 11, 20, 0.6)',
+              backgroundColor: '#080d18',
               flexShrink: 0
             }}
           >
@@ -845,7 +830,7 @@ export default function Home() {
             style={{
               padding: '10px 16px',
               borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-              backgroundColor: 'rgba(7, 11, 20, 0.7)',
+              backgroundColor: '#080d18',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -864,7 +849,7 @@ export default function Home() {
 
       </main>
 
-      {/* ─── MODAL (IF OPENED) ─── */}
+      {/* ─── MODAL ─── */}
       {showReceiptModal && selectedReceipt && (
         <AnswerReceiptModal
           receipt={selectedReceipt}
