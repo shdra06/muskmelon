@@ -3,6 +3,9 @@ import { MUSK_COGNITIVE_SIGNATURE, ELON_PROMPT_SYSTEM_INSTRUCTION } from './cogn
 import { TemporalChunk, AgentResponse, Message } from '../types';
 import { generateAnswerReceipt } from './answer-receipt';
 
+/**
+ * Returns active OpenAI client if OPENAI_API_KEY is configured
+ */
 function getOpenAIClient(): OpenAI | null {
   const key = process.env.OPENAI_API_KEY;
   if (key && key.startsWith('sk-') && !key.includes('...')) {
@@ -47,7 +50,7 @@ async function callOpenRouterAPI(systemPrompt: string, userQuery: string, histor
     const data = await res.json();
     return data?.choices?.[0]?.message?.content || null;
   } catch (error) {
-    console.warn('OpenRouter API call error:', error);
+    console.warn('OpenRouter API notice:', error);
     return null;
   }
 }
@@ -170,7 +173,8 @@ function generateLocalElonResponse(query: string, contextChunks: TemporalChunk[]
 }
 
 /**
- * Grounded generator for Elon Musk persona supporting OpenRouter, OpenAI, and Gemini with full multi-turn session history.
+ * Grounded generator for Elon Musk persona using OpenAI (GPT-4o) as primary default reasoning model,
+ * with RAG chunks injected, and OpenRouter / Gemini / Local First-Principles engine fallbacks.
  */
 export async function generateGroundedResponse(
   query: string,
@@ -180,29 +184,18 @@ export async function generateGroundedResponse(
   history: Message[] = []
 ): Promise<AgentResponse> {
   const contextText = contextChunks.length > 0 
-    ? contextChunks.map((c, i) => `[Source ${i + 1}, Date: ${c.validFrom}] ${c.content}`).join('\n\n')
+    ? contextChunks.map((c, i) => `[Source ${i + 1}, Date: ${c.validFrom}, Topic: ${c.metadata?.topic || 'general'}] ${c.content}`).join('\n\n')
     : 'No direct historical quote in dataset. Use First Principles Reasoning and Musk Cognitive Signature to generalize.';
 
   const systemPrompt = `${ELON_PROMPT_SYSTEM_INSTRUCTION}
 
-## CURRENT CONTEXT & KNOWLEDGE EVIDENCE:
+## CURRENT VERIFIED RAG KNOWLEDGE CONTEXT:
 ${contextText}
 
 Current Mode: ${mode} ${asOfDate ? `(As of ${asOfDate})` : ''}
 `;
 
-  // 1. Try OpenRouter API with history
-  const openRouterAnswer = await callOpenRouterAPI(systemPrompt, query, history);
-  if (openRouterAnswer) {
-    const receipt = await generateAnswerReceipt(query, openRouterAnswer, contextChunks, mode as any, asOfDate);
-    return {
-      message: openRouterAnswer,
-      receipt,
-      confidence: receipt.groundingConfidence || 0.95
-    };
-  }
-
-  // 2. Try OpenAI API with history (with quick timeout / quota catch)
+  // 1. PRIMARY DEFAULT: OpenAI (GPT-4o / GPT-4o-mini)
   const openaiClient = getOpenAIClient();
   if (openaiClient) {
     try {
@@ -212,7 +205,7 @@ Current Mode: ${mode} ${asOfDate ? `(As of ${asOfDate})` : ''}
       }));
 
       const response = await openaiClient.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         temperature: 0.6,
         messages: [
           { role: 'system', content: systemPrompt },
@@ -231,11 +224,22 @@ Current Mode: ${mode} ${asOfDate ? `(As of ${asOfDate})` : ''}
         };
       }
     } catch (error: any) {
-      console.warn('OpenAI Chat Completion notice (switching to deterministic first-principles engine):', error?.message || error);
+      console.warn('OpenAI GPT-4o notice (switching to secondary reasoning engine):', error?.message || error);
     }
   }
 
-  // 3. Try Google Gemini API with history
+  // 2. SECONDARY: OpenRouter API (Claude 3.5 Sonnet / Llama 3.3 / DeepSeek)
+  const openRouterAnswer = await callOpenRouterAPI(systemPrompt, query, history);
+  if (openRouterAnswer) {
+    const receipt = await generateAnswerReceipt(query, openRouterAnswer, contextChunks, mode as any, asOfDate);
+    return {
+      message: openRouterAnswer,
+      receipt,
+      confidence: receipt.groundingConfidence || 0.95
+    };
+  }
+
+  // 3. TERTIARY: Google Gemini API (Gemini 1.5 Flash)
   const geminiAnswer = await callGeminiAPI(systemPrompt, query, history);
   if (geminiAnswer) {
     const receipt = await generateAnswerReceipt(query, geminiAnswer, contextChunks, mode as any, asOfDate);
@@ -246,7 +250,7 @@ Current Mode: ${mode} ${asOfDate ? `(As of ${asOfDate})` : ''}
     };
   }
 
-  // 4. High-precision deterministic local reasoning engine
+  // 4. GUARANTEED DETERMINISTIC: High-Precision Local First-Principles Engine
   const answer = generateLocalElonResponse(query, contextChunks, mode, asOfDate);
   const receipt = await generateAnswerReceipt(query, answer, contextChunks, mode as any, asOfDate);
 
