@@ -541,5 +541,24 @@
       "durationMs": 4737,
       "retryCount": 0
     }
+  },
+  {
+    "id": "c4dbcfeb-4192-4666-85d2-11aadd46fbd3",
+    "timestamp": "2026-08-23T10:01:19.803Z",
+    "toolName": "mindcommit.chat",
+    "input": {
+      "mode": "now",
+      "messageLength": 8,
+      "hasHistory": true
+    },
+    "policyResult": {
+      "allowed": true,
+      "action": "allow"
+    },
+    "execution": {
+      "success": true,
+      "durationMs": 6595,
+      "retryCount": 0
+    }
   }
 ]

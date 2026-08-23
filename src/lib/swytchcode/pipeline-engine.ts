@@ -7,7 +7,7 @@
  * 1. Discovery: Finds live information (Firecrawl / Jina / YouTube)
  * 2. Knowledge: Ingests documents (Google Drive / Notion / GitHub / CSV)
  * 3. RAG: Remembers & retrieves context (Weaviate / Temporal Vector Store)
- * 4. LLM: Reasons from first principles (OpenAI GPT-4o / Gemini 1.5)
+ * 4. LLM: Reasons via OpenAI API (GPT-4o / Gemini 1.5)
  * 5. Swytchcode: Executes policies, idempotency, retries & telemetry
  * 6. Communication: Distributes verified output (Slack / Telegram / Gmail / Resend)
  * 7. Automation: Schedules recurring synchronization (Google Calendar / Crons)
@@ -157,14 +157,14 @@ export async function executeEndToEndPipeline(
   });
 
   // -------------------------------------------------------------
-  // PHASE 4: LLM REASONING & FIRST-PRINCIPLES SYNTHESIS
+  // PHASE 4: LLM REASONING & SYNTHESIS
   // -------------------------------------------------------------
   const step4Start = Date.now();
   const response = await generateGroundedResponse(query, contextChunks, options.asOfDate ? 'time-lens' : 'now', options.asOfDate);
   
   steps.push({
     stepIndex: 4,
-    name: 'LLM: First-Principles Persona Reasoning',
+    name: 'LLM: OpenAI Persona Reasoning',
     category: 'LLM',
     toolUsed: 'openai.chat_completion',
     status: 'COMPLETED',

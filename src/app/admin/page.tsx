@@ -48,12 +48,12 @@ export default function AdminPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 bg-[#090d16] border border-[#1e293b] rounded-xl">
                 <div className="text-xs text-[#94a3b8] mb-1 font-mono uppercase">Communication Style</div>
-                <div className="text-xs text-[#cbd5e1] leading-relaxed">Direct, bold, physics-based first principles, memes & humor, technical clarity.</div>
+                <div className="text-xs text-[#cbd5e1] leading-relaxed">Direct, bold, physics-based reasoning, memes & humor, technical clarity.</div>
               </div>
               <div className="p-4 bg-[#090d16] border border-[#1e293b] rounded-xl">
                 <div className="text-xs text-[#94a3b8] mb-1 font-mono uppercase">Core Knowledge Domains</div>
                 <div className="flex flex-wrap gap-1.5 mt-2">
-                  {['Tesla', 'SpaceX', 'Starship', 'Neuralink', 'xAI', 'Grok', 'Mars', 'Crypto', 'DOGE', 'First Principles'].map(t => (
+                  {['Tesla', 'SpaceX', 'Starship', 'Neuralink', 'xAI', 'Grok', 'Mars', 'Crypto', 'DOGE', 'Optimus'].map(t => (
                     <span key={t} className="px-2 py-0.5 bg-[#1e293b] border border-[#334155] rounded-md text-[11px] text-[#38bdf8] font-mono">{t}</span>
                   ))}
                 </div>

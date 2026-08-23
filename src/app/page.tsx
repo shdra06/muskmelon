@@ -27,54 +27,8 @@ export default function Home() {
   const [input, setInput] = useState('');
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   
-  // Real conversation stream
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'user',
-      content: 'What do you think about the future of human civilization?',
-      timestamp: '15:12'
-    },
-    {
-      role: 'assistant',
-      content: 'The future is fundamentally about becoming a multiplanetary species. We must extend life beyond Earth and make humanity a spacefaring civilization.',
-      confidence: 0.96,
-      timestamp: '15:12',
-      receipt: {
-        sources: [{ source: 'Starbase All-Hands', date: '2024-04-06' }],
-        groundingConfidence: 0.96
-      }
-    },
-    {
-      role: 'user',
-      content: 'Best investment according to you?',
-      timestamp: '15:13'
-    },
-    {
-      role: 'assistant',
-      content: 'I believe in solving real physical engineering problems that move humanity forward. Don\'t chase paper games or financial engineering. The highest return comes from advancing sustainable energy, autonomous transport, orbital heavy lift, and high-bandwidth neural interfaces.',
-      confidence: 0.94,
-      timestamp: '15:13',
-      receipt: {
-        sources: [{ source: 'Kevin Rose Foundation', date: '2012-02-15' }],
-        groundingConfidence: 0.94
-      }
-    },
-    {
-      role: 'user',
-      content: 'How do you stay productive?',
-      timestamp: '15:14'
-    },
-    {
-      role: 'assistant',
-      content: 'I focus almost 80% to 90% of my time on engineering and design. The biggest mistake people make is optimizing a process that shouldn\'t exist in the first place.\n\nMy 5-step algorithm:\n1. Make requirements less dumb.\n2. Delete the part or process step.\n3. Simplify or optimize.\n4. Accelerate cycle time.\n5. Automate.',
-      confidence: 0.98,
-      timestamp: '15:14',
-      receipt: {
-        sources: [{ source: 'Everyday Astronaut Starbase Tour', date: '2021-08-04' }],
-        groundingConfidence: 0.98
-      }
-    }
-  ]);
+  // Real conversation stream (100% LLM API driven)
+  const [messages, setMessages] = useState<Message[]>([]);
 
   // Streaming text for typewriter animation
   const [streamingText, setStreamingText] = useState<string>('');
@@ -175,7 +129,7 @@ export default function Home() {
       }
     } catch (error) {
       console.error(error);
-      const fallback = "Yeah, from first principles, when scaling complex hardware or software systems, you have to eliminate unnecessary constraints. What specific engineering question can I help you break down?";
+      const fallback = "Hmm, looks like there was a connection issue with the API. Try again — what would you like to know?";
       streamAssistantResponse(newMsgList, fallback);
     } finally {
       setIsLoading(false);
@@ -274,7 +228,7 @@ export default function Home() {
         }}
       />
 
-      {/* ─── 2. TOP NAV BAR (HIGH-TECH GLASS HUD) ─── */}
+      {/* ─── 2. TOP NAV BAR ─── */}
       <header 
         style={{
           position: 'relative',
@@ -282,183 +236,198 @@ export default function Home() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '10px 28px',
-          backgroundColor: 'rgba(6, 11, 25, 0.75)',
-          backdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(56, 189, 248, 0.15)',
-          boxShadow: '0 4px 30px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+          padding: '12px 32px',
+          backgroundColor: 'rgba(8, 12, 24, 0.72)',
+          backdropFilter: 'blur(24px) saturate(1.4)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+          boxShadow: '0 1px 24px rgba(0, 0, 0, 0.35)',
           flexShrink: 0
         }}
       >
-        {/* Brand with Glowing Neon Badge */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Brand */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          {/* Logo mark – a clean gradient shape, no emoji */}
           <div 
             style={{
               position: 'relative',
-              width: '34px',
-              height: '34px',
-              borderRadius: '10px',
-              backgroundColor: 'rgba(15, 23, 42, 0.9)',
-              border: '1px solid rgba(56, 189, 248, 0.3)',
+              width: '36px',
+              height: '36px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #f97316 0%, #f59e0b 50%, #ef4444 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '18px',
-              boxShadow: '0 0 15px rgba(56, 189, 248, 0.25)'
+              boxShadow: '0 2px 12px rgba(249, 115, 22, 0.3)',
+              flexShrink: 0
             }}
           >
-            🍉
+            {/* Inner letter mark */}
+            <span style={{ 
+              fontWeight: 900, 
+              fontSize: '17px', 
+              color: '#ffffff', 
+              lineHeight: 1,
+              textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+            }}>M</span>
+            {/* Online indicator */}
             <span 
               style={{
                 position: 'absolute',
-                top: '-2px',
-                right: '-2px',
-                width: '7px',
-                height: '7px',
+                bottom: '-1px',
+                right: '-1px',
+                width: '9px',
+                height: '9px',
                 borderRadius: '50%',
-                backgroundColor: '#10b981',
-                boxShadow: '0 0 8px #10b981'
+                backgroundColor: '#22c55e',
+                border: '2px solid rgba(8, 12, 24, 0.9)',
+                boxShadow: '0 0 6px rgba(34, 197, 94, 0.5)'
               }}
             />
           </div>
           <div>
-            <div style={{ fontWeight: 900, fontSize: '15px', letterSpacing: '0.09em', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span>MUSKMELON</span>
-              <span style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', fontFamily: 'monospace' }}>
-                v4.2 PRO
+            <div style={{ fontWeight: 800, fontSize: '16px', letterSpacing: '0.04em', color: '#f1f5f9', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>Muskmelon</span>
+              <span style={{ 
+                fontSize: '10px', 
+                padding: '2px 8px', 
+                borderRadius: '6px', 
+                background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(239, 68, 68, 0.1))',
+                color: '#fb923c', 
+                border: '1px solid rgba(249, 115, 22, 0.25)', 
+                fontWeight: 600,
+                letterSpacing: '0.03em'
+              }}>
+                v4.2 Pro
               </span>
             </div>
-            <div style={{ fontSize: '9.5px', fontFamily: 'monospace', letterSpacing: '0.12em', color: '#94a3b8' }}>
-              VERSION-CONTROLLED KNOWLEDGE TWIN
+            <div style={{ fontSize: '11px', letterSpacing: '0.02em', color: '#64748b', fontWeight: 500, marginTop: '1px' }}>
+              Version-Controlled Knowledge Twin
             </div>
           </div>
         </div>
 
-        {/* Center Mode Switcher (Futuristic Cyberpunk Pill) */}
+        {/* Center Mode Switcher */}
         <div 
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
-            backgroundColor: 'rgba(11, 18, 38, 0.85)',
-            padding: '4px 6px',
+            gap: '4px',
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            padding: '4px',
             borderRadius: '14px',
-            border: '1px solid rgba(56, 189, 248, 0.2)',
-            boxShadow: '0 0 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+            border: '1px solid rgba(255, 255, 255, 0.06)',
           }}
         >
           <button
             onClick={() => setMode('now')}
             style={{
-              padding: '6px 14px',
+              padding: '7px 16px',
               borderRadius: '10px',
-              fontSize: '11.5px',
-              fontFamily: 'monospace',
-              fontWeight: 700,
+              fontSize: '12.5px',
+              fontWeight: 600,
               cursor: 'pointer',
-              border: mode === 'now' ? '1px solid rgba(16, 185, 129, 0.5)' : '1px solid transparent',
-              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-              backgroundColor: mode === 'now' ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
+              border: 'none',
+              transition: 'all 0.2s ease',
+              backgroundColor: mode === 'now' ? 'rgba(16, 185, 129, 0.15)' : 'transparent',
               color: mode === 'now' ? '#34d399' : '#94a3b8',
-              boxShadow: mode === 'now' ? '0 0 15px rgba(16, 185, 129, 0.25)' : 'none',
+              boxShadow: mode === 'now' ? '0 0 1px rgba(16, 185, 129, 0.4)' : 'none',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px'
+              gap: '7px',
+              letterSpacing: '0.01em'
             }}
           >
-            <Zap size={13} className={mode === 'now' ? 'text-emerald-400 animate-pulse' : ''} />
-            <span>Now Mode (2025+)</span>
+            <Zap size={14} style={{ opacity: mode === 'now' ? 1 : 0.6 }} />
+            <span>Now Mode</span>
           </button>
 
           <button
             onClick={() => setMode('time')}
             style={{
-              padding: '6px 14px',
+              padding: '7px 16px',
               borderRadius: '10px',
-              fontSize: '11.5px',
-              fontFamily: 'monospace',
-              fontWeight: 700,
+              fontSize: '12.5px',
+              fontWeight: 600,
               cursor: 'pointer',
-              border: mode === 'time' ? '1px solid rgba(245, 158, 11, 0.5)' : '1px solid transparent',
-              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-              backgroundColor: mode === 'time' ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+              border: 'none',
+              transition: 'all 0.2s ease',
+              backgroundColor: mode === 'time' ? 'rgba(245, 158, 11, 0.15)' : 'transparent',
               color: mode === 'time' ? '#fbbf24' : '#94a3b8',
-              boxShadow: mode === 'time' ? '0 0 15px rgba(245, 158, 11, 0.25)' : 'none',
+              boxShadow: mode === 'time' ? '0 0 1px rgba(245, 158, 11, 0.4)' : 'none',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px'
+              gap: '7px',
+              letterSpacing: '0.01em'
             }}
           >
-            <Clock size={13} />
+            <Clock size={14} style={{ opacity: mode === 'time' ? 1 : 0.6 }} />
             <span>Time Lens</span>
           </button>
 
           <button
             onClick={() => setMode('diff')}
             style={{
-              padding: '6px 14px',
+              padding: '7px 16px',
               borderRadius: '10px',
-              fontSize: '11.5px',
-              fontFamily: 'monospace',
-              fontWeight: 700,
+              fontSize: '12.5px',
+              fontWeight: 600,
               cursor: 'pointer',
-              border: mode === 'diff' ? '1px solid rgba(168, 85, 247, 0.5)' : '1px solid transparent',
-              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-              backgroundColor: mode === 'diff' ? 'rgba(168, 85, 247, 0.2)' : 'transparent',
+              border: 'none',
+              transition: 'all 0.2s ease',
+              backgroundColor: mode === 'diff' ? 'rgba(168, 85, 247, 0.15)' : 'transparent',
               color: mode === 'diff' ? '#c084fc' : '#94a3b8',
-              boxShadow: mode === 'diff' ? '0 0 15px rgba(168, 85, 247, 0.25)' : 'none',
+              boxShadow: mode === 'diff' ? '0 0 1px rgba(168, 85, 247, 0.4)' : 'none',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px'
+              gap: '7px',
+              letterSpacing: '0.01em'
             }}
           >
-            <GitCompare size={13} />
+            <GitCompare size={14} style={{ opacity: mode === 'diff' ? 1 : 0.6 }} />
             <span>Belief Diff</span>
           </button>
         </div>
 
         {/* Right Status Badges & Admin Portal */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {/* Weaviate Cluster Sync Badge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {/* Weaviate Cloud Badge */}
           <div 
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '5px 12px',
-              backgroundColor: 'rgba(14, 165, 233, 0.12)',
-              border: '1px solid rgba(56, 189, 248, 0.35)',
+              padding: '6px 14px',
+              backgroundColor: 'rgba(14, 165, 233, 0.08)',
+              border: '1px solid rgba(56, 189, 248, 0.18)',
               borderRadius: '9999px',
-              fontSize: '10.5px',
-              fontFamily: 'monospace',
-              fontWeight: 700,
-              color: '#38bdf8',
-              boxShadow: '0 0 12px rgba(14, 165, 233, 0.15)'
+              fontSize: '11px',
+              fontWeight: 600,
+              color: '#7dd3fc',
+              letterSpacing: '0.01em'
             }}
           >
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#38bdf8', boxShadow: '0 0 6px #38bdf8' }} />
-            <span>WEAVIATE CLOUD</span>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#38bdf8', boxShadow: '0 0 4px rgba(56, 189, 248, 0.5)' }} />
+            <span>Weaviate Cloud</span>
           </div>
 
-          {/* Swytchcode Policy Protected Badge */}
+          {/* Swytchcode Secured Badge */}
           <div 
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '5px 12px',
-              backgroundColor: 'rgba(16, 185, 129, 0.12)',
-              border: '1px solid rgba(16, 185, 129, 0.35)',
+              padding: '6px 14px',
+              backgroundColor: 'rgba(16, 185, 129, 0.08)',
+              border: '1px solid rgba(16, 185, 129, 0.18)',
               borderRadius: '9999px',
-              fontSize: '10.5px',
-              fontFamily: 'monospace',
-              fontWeight: 700,
-              color: '#34d399',
-              boxShadow: '0 0 12px rgba(16, 185, 129, 0.15)'
+              fontSize: '11px',
+              fontWeight: 600,
+              color: '#6ee7b7',
+              letterSpacing: '0.01em'
             }}
           >
-            <Shield size={11} className="text-emerald-400" />
-            <span>SWYTCHCODE SECURED</span>
+            <Shield size={12} style={{ opacity: 0.85 }} />
+            <span>Swytchcode Secured</span>
           </div>
 
           <Link
@@ -466,21 +435,20 @@ export default function Home() {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
-              padding: '6px 14px',
-              backgroundColor: 'rgba(30, 41, 59, 0.85)',
-              border: '1px solid rgba(243, 149, 31, 0.4)',
+              gap: '7px',
+              padding: '7px 16px',
+              backgroundColor: 'rgba(30, 41, 59, 0.6)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
               borderRadius: '10px',
-              fontSize: '11.5px',
-              fontFamily: 'monospace',
-              fontWeight: 700,
-              color: '#f8fafc',
+              fontSize: '12.5px',
+              fontWeight: 600,
+              color: '#e2e8f0',
               textDecoration: 'none',
-              transition: 'all 0.2s',
-              boxShadow: '0 0 12px rgba(243, 149, 31, 0.1)'
+              transition: 'all 0.2s ease',
+              letterSpacing: '0.01em'
             }}
           >
-            <Database size={13} color="#f3951f" />
+            <Database size={14} color="#fb923c" />
             <span>Audit Admin</span>
           </Link>
         </div>
@@ -710,7 +678,7 @@ export default function Home() {
                   ref={textareaRef}
                   value={input}
                   onChange={e => setInput(e.target.value)}
-                  placeholder="Type your question to Elon (or ask from first principles)..."
+                  placeholder="Ask Elon anything..."
                   rows={2}
                   disabled={isLoading}
                   style={{
@@ -942,7 +910,7 @@ export default function Home() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%', marginTop: '6px' }}>
                   {[
                     '🚀 What is the roadmap for landing Starship on Mars?',
-                    '⚡ How do you calculate battery pack cost from first principles?',
+                    '⚡ How do you calculate battery pack cost at scale?',
                     '🤖 When will Cybercab & unsupervised FSD deploy?'
                   ].map((preset, idx) => (
                     <button
@@ -1139,7 +1107,7 @@ export default function Home() {
                 }}
               >
                 <RefreshCw size={14} className="animate-spin text-cyan-400" />
-                <span>Reasoning from First Principles (Weaviate Query)...</span>
+                <span>Querying Knowledge Base via OpenAI...</span>
               </div>
             )}
           </div>
